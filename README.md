@@ -13,3 +13,11 @@ The original published version is preserved on the `v1` branch at commit `5090c1
 
 Course preset: Hopewell Valley Golf Club, Blue tees, par 72, 6,612 yards. Source: https://golfmercercounty.com/wp-content/uploads/2025/03/196189_proofV1.pdf
 Course and tee details are included in saved JSON and CSV files.
+
+## Save rounds to GitHub (v2.7)
+
+Use **Save to GitHub** to save the current round as a JSON file under `rounds/` in this repository. Each new round has a unique ID and its own file; subsequent saves update the same file. The JSON includes the course, round date, scores, and shot history, and can be downloaded and restored with **Load Round**.
+
+Open **Connect GitHub** in the app. Create a fine-grained personal access token in GitHub Settings → Developer settings → Personal access tokens, limited to this repository with **Contents: Read and write** and an expiration date. Paste the token into the app and connect. The token remains only in page memory until the page closes or reloads; it is never persisted in browser storage or included in round files. The ChatGPT GitHub connection does not authorize writes from the independently hosted app.
+
+Saved rounds are public in the current repository. A successful save displays a link to its file; failed saves retain the round on the device. **Save Round** continues to download a local backup. While offline, use local tracking and save to GitHub after reconnecting.
