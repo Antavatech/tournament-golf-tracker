@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'tournament-golf-tracker-';
-const CACHE = CACHE_PREFIX + 'v7';
+const CACHE = CACHE_PREFIX + 'v8';
 const BASE = new URL('./', self.location.href);
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];

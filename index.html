@@ -55,27 +55,32 @@
     .bottom-controls{position:sticky;bottom:0;background:rgba(244,245,247,.96);padding:6px 0;backdrop-filter:blur(12px)}
     .nav button.active{background:#111827;color:white}
     table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #eee;text-align:center}th:first-child,td:first-child{text-align:left}
-    @media(max-width:480px){
-      .hole-heading{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-      #holeCourseName{font-size:14px}.hole-details{font-size:14px}.hole-details strong{display:block}
-      #holeRoundDate{font-size:12px}
-      .app{padding-left:8px;padding-right:8px}h1{font-size:18px}
-      .hole-heading{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:start}
-    #holeCourseName{font-size:19px;font-weight:750;overflow-wrap:anywhere}
-    .hole-details{text-align:center}
-    #holeRoundDate{text-align:right}
-    .players{gap:6px}.player-card{padding:8px 5px;border-radius:12px}
-      .player-name{font-size:14px}.player-card .muted{font-size:11px}
-      .player-actions button{font-size:13px;padding:6px 3px;min-height:44px;border-radius:9px}
-      .player-card .pill{font-size:11px;padding:4px 5px}
-      .hole-controls{gap:6px}.hole-controls button{padding:8px}
+    @media(max-width:640px){
+      .app{padding-left:12px;padding-right:12px}h1{font-size:18px}
+      .hole-heading{grid-template-columns:1fr 1fr;gap:10px;align-items:center}
+      #holeCourseName{grid-column:1 / -1;font-size:18px;line-height:1.35}
+      .hole-details{text-align:left;font-size:16px}
+      #holeRoundDate{font-size:13px;text-align:right}
+      .hole-controls{justify-content:space-between!important;gap:8px;margin-top:14px!important}
+      .hole-controls button{flex:1;padding:10px 8px}
+      .players{grid-template-columns:1fr;gap:12px}
+      .player-card{padding:16px;text-align:left}
+      .player-name{font-size:19px}
+      .player-card .score{float:right;margin-top:-30px;font-size:32px}
+      .player-card > .muted{font-size:13px}
+      .player-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
+      .player-actions button{font-size:15px;padding:10px 8px;min-height:48px}
+      .player-card .shotlog{max-height:none}
+      .bottom-controls{position:static;padding:8px 0}
+      .bottom-controls button{font-size:13px;padding:8px 4px;min-height:44px}
+      #fileStatus{font-size:12px;line-height:1.4}
     }
   </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker <span class="version">v2.4</span></h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2.5</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
