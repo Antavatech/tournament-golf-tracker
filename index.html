@@ -30,6 +30,10 @@
     button.danger{color:var(--danger)}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .hole-heading{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:start}
+    #holeCourseName{font-size:19px;font-weight:750;overflow-wrap:anywhere}
+    .hole-details{text-align:center}
+    #holeRoundDate{text-align:right}
     .players{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
     .player-card{min-width:0;padding:12px;text-align:center}
     .player-name{font-size:18px;margin:0 0 4px;overflow-wrap:anywhere}
@@ -52,8 +56,15 @@
     .nav button.active{background:#111827;color:white}
     table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #eee;text-align:center}th:first-child,td:first-child{text-align:left}
     @media(max-width:480px){
+      .hole-heading{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+      #holeCourseName{font-size:14px}.hole-details{font-size:14px}.hole-details strong{display:block}
+      #holeRoundDate{font-size:12px}
       .app{padding-left:8px;padding-right:8px}h1{font-size:18px}
-      .players{gap:6px}.player-card{padding:8px 5px;border-radius:12px}
+      .hole-heading{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:start}
+    #holeCourseName{font-size:19px;font-weight:750;overflow-wrap:anywhere}
+    .hole-details{text-align:center}
+    #holeRoundDate{text-align:right}
+    .players{gap:6px}.player-card{padding:8px 5px;border-radius:12px}
       .player-name{font-size:14px}.player-card .muted{font-size:11px}
       .player-actions button{font-size:13px;padding:6px 3px;min-height:44px;border-radius:9px}
       .player-card .pill{font-size:11px;padding:4px 5px}
@@ -64,7 +75,7 @@
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker <span class="version">v2.3</span></h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2.4</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
@@ -87,10 +98,12 @@
 
   <section id="playView" class="hidden">
     <div class="card">
-      <div id="holeCourseName" style="font-size:19px;font-weight:750"></div>
-      <div id="holeRoundDate" class="muted" style="margin:4px 0 12px"></div>
-      <div class="row hole-controls">
-        <div class="grow"><strong>Hole <span id="holeNo">1</span></strong> <span class="muted">Par <span id="parNo">4</span> <span id="holeYardage"></span></span></div>
+      <div class="hole-heading">
+        <div id="holeCourseName"></div>
+        <div class="hole-details"><strong>Hole <span id="holeNo">1</span></strong> <span class="muted">Par <span id="parNo">4</span> <span id="holeYardage"></span></span></div>
+        <div id="holeRoundDate" class="muted"></div>
+      </div>
+      <div class="row hole-controls" style="justify-content:flex-end;margin-top:10px">
         <button id="prevHole" aria-label="Previous hole">← Hole</button><button id="nextHole" class="primary">Next Hole →</button>
       </div>
       <div class="grid" style="margin-top:8px" aria-label="Hole par">
