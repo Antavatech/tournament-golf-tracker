@@ -36,7 +36,7 @@
     .player-actions{display:grid;gap:6px;margin-top:10px}
     .player-actions button{width:100%}
     .player-card .shotlog{max-height:90px;overflow:auto;margin-top:8px;text-align:left}
-    .file-tools{margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px}
+    .file-tools{margin:6px 0 0;display:flex;flex-wrap:wrap;gap:8px}
     .file-tools button{flex:1}
     #fileStatus{flex-basis:100%;margin:0}
     .version{font-size:12px;font-weight:500;color:var(--muted)}
@@ -47,7 +47,8 @@
     .hidden{display:none!important}
     label{display:block;font-size:13px;color:var(--muted);margin:8px 0 5px}
     input,select{width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;padding:10px;background:white}
-    .nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;position:sticky;bottom:0;background:rgba(244,245,247,.94);padding:8px 0 4px;backdrop-filter:blur(12px)}
+    .nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:4px 0}
+    .bottom-controls{position:sticky;bottom:0;background:rgba(244,245,247,.96);padding:6px 0;backdrop-filter:blur(12px)}
     .nav button.active{background:#111827;color:white}
     table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #eee;text-align:center}th:first-child,td:first-child{text-align:left}
     @media(max-width:480px){
@@ -63,17 +64,10 @@
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker <span class="version">v2.1</span></h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2.2</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
-  <div class="file-tools">
-    <button id="saveFileBtn" class="primary" disabled>Save Round</button>
-    <button id="csvBtn" disabled>Export CSV</button>
-    <button id="loadFileBtn">Load Round</button>
-    <input type="file" id="roundFile" accept=".json,application/json" class="hidden" aria-label="Load round file">
-    <p id="fileStatus" class="muted" role="status">Save Round downloads a backup file. Load Round restores it.</p>
-  </div>
   <section id="setupView">
     <div class="card">
       <div class="big">Start a round</div>
@@ -121,11 +115,20 @@
     </div>
   </section>
 
+  <footer class="bottom-controls">
   <nav class="nav hidden" id="nav">
     <button data-view="playView" class="active">Track</button>
     <button data-view="scorecardView">Scorecard</button>
     <button data-view="summaryView">Summary</button>
   </nav>
+  <div class="file-tools">
+    <button id="saveFileBtn" class="primary" disabled>Save Round</button>
+    <button id="csvBtn" disabled>Export CSV</button>
+    <button id="loadFileBtn">Load Round</button>
+    <input type="file" id="roundFile" accept=".json,application/json" class="hidden" aria-label="Load round file">
+    <p id="fileStatus" class="muted" role="status">Save Round downloads a backup file. Load Round restores it.</p>
+  </div>
+  </footer>
 </div>
 
 <script>
