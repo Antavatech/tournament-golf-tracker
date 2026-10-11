@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Golf Tracker">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-180.png">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <title>Tournament Golf Tracker</title>
+  <style>
+    :root{
+      --bg:#f4f5f7;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#d1d5db;
+      --accent:#166534;--accent2:#dcfce7;--danger:#b91c1c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input,select{font:inherit}
+    .app{max-width:760px;margin:auto;padding:env(safe-area-inset-top) 14px calc(20px + env(safe-area-inset-bottom))}
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 2px}
+    h1{font-size:21px;margin:0}.sub{font-size:13px;color:var(--muted)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1}.right{text-align:right}
+    button{min-height:46px;border-radius:13px;border:1px solid var(--line);background:#fff;padding:10px 13px;font-weight:650}
+    button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    button.soft{background:var(--accent2);border-color:#bbf7d0}
+    button.danger{color:var(--danger)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .player-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+    .player-tabs button.active{background:var(--accent2);border-color:#86efac}
+    .big{font-size:34px;font-weight:800;line-height:1}.score{font-size:32px;font-weight:800}
+    .muted{color:var(--muted);font-size:13px}
+    .shotlog{display:flex;gap:6px;flex-wrap:wrap}.pill{background:#f3f4f6;border-radius:999px;padding:7px 10px;font-size:13px}
+    .scoreline{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee}.scoreline:last-child{border:0}
+    .hidden{display:none!important}
+    label{display:block;font-size:13px;color:var(--muted);margin:8px 0 5px}
+    input,select{width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;padding:10px;background:white}
+    .nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;position:sticky;bottom:0;background:rgba(244,245,247,.94);padding:8px 0 4px;backdrop-filter:blur(12px)}
+    .nav button.active{background:#111827;color:white}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #eee;text-align:center}th:first-child,td:first-child{text-align:left}
+    @media(max-width:420px){.grid{grid-template-columns:repeat(2,1fr)}.player-tabs{grid-template-columns:1fr}.player-tabs button{min-height:42px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><h1>Tournament Golf Tracker</h1><div class="sub" id="courseLabel">New round</div></div>
+    <button id="newRoundBtn">New</button>
+  </header>
+
+  <section id="setupView">
+    <div class="card">
+      <div class="big">Start a round</div>
+      <p class="muted">Enter the course and up to three golfers. Your round is saved automatically on this device.</p>
+      <label>Course</label><input id="courseInput" placeholder="Course name">
+      <label>Your son</label><input id="p1" value="Son">
+      <label>Opponent 1</label><input id="p2" value="Opponent 1">
+      <label>Opponent 2</label><input id="p3" value="Opponent 2">
+      <label>Starting hole</label>
+      <select id="startHole"></select>
+      <button class="primary" id="startBtn" style="width:100%;margin-top:12px">Start Round</button>
+    </div>
+  </section>
+
+  <section id="playView" class="hidden">
+    <div class="card">
+      <div class="row">
+        <div class="grow"><div class="muted">Current hole</div><div><span class="big" id="holeNo">1</span> <span class="muted">Par <span id="parNo">4</span></span></div></div>
+        <div class="right"><div class="muted">Hole score</div><div class="score" id="holeScore">0</div></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="prevHole">← Hole</button><button id="nextHole" class="primary">Next Hole →</button>
+      </div>
+    </div>
+
+    <div id="playerTabs" class="player-tabs" style="margin-bottom:12px"></div>
+
+    <div class="card">
+      <div class="row"><div class="grow"><div id="activeName" style="font-size:20px;font-weight:800"></div><div class="muted" id="shotNo">Shot 1</div></div></div>
+      <div class="grid" style="margin-top:12px">
+        <button class="shot" data-shot="Fairway">Fairway</button>
+        <button class="shot" data-shot="Rough">Rough</button>
+        <button class="shot" data-shot="Green">Green</button>
+        <button class="shot" data-shot="Bunker">Bunker</button>
+        <button class="shot" data-shot="Putt">Putt</button>
+        <button class="shot" data-shot="Other">Other</button>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <button id="penaltyBtn">+ Penalty</button><button id="undoBtn">Undo</button>
+      </div>
+      <div class="muted" style="margin-top:12px">Shots this hole</div>
+      <div id="shotLog" class="shotlog" style="margin-top:7px"></div>
+    </div>
+
+    <div class="card">
+      <div class="row"><strong>Hole par</strong></div>
+      <div class="grid" style="margin-top:8px">
+        <button class="par" data-par="3">Par 3</button><button class="par" data-par="4">Par 4</button><button class="par" data-par="5">Par 5</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="scorecardView" class="hidden">
+    <div class="card">
+      <div class="row"><div class="grow"><strong style="font-size:20px">Scorecard</strong><div class="muted" id="scorecardCourse"></div></div></div>
+      <div style="overflow-x:auto;margin-top:10px"><table id="scoreTable"></table></div>
+    </div>
+  </section>
+
+  <section id="summaryView" class="hidden">
+    <div class="card">
+      <strong style="font-size:20px">Round summary</strong>
+      <div id="summary" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <button id="clearBtn" class="danger" style="width:100%">Clear Saved Round</button>
+    </div>
+  </section>
+
+  <nav class="nav hidden" id="nav">
+    <button data-view="playView" class="active">Track</button>
+    <button data-view="scorecardView">Scorecard</button>
+    <button data-view="summaryView">Summary</button>
+  </nav>
+</div>
+
+<script>
+const KEY='tournament-golf-tracker-v1';
+const $=s=>document.querySelector(s);
+const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const state=load()||{course:'',hole:0,pars:Array(18).fill(4),active:0,players:[]};
+
+for(let i=1;i<=18;i++){const o=document.createElement('option');o.value=i-1;o.textContent='Hole '+i;$('#startHole').appendChild(o)}
+
+function blankPlayer(name){return {name,holes:Array.from({length:18},()=>({shots:[],penalties:0}))}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}}
+function hd(pi=state.active){return state.players[pi].holes[state.hole]}
+function hs(pi=state.active){const h=hd(pi);return h.shots.length+h.penalties}
+function total(pi){return state.players[pi].holes.reduce((a,h)=>a+h.shots.length+h.penalties,0)}
+function parThrough(){return state.pars.reduce((a,p,i)=>a+(i<=state.hole?p:0),0)}
+function toPar(pi){const d=total(pi)-parThrough();return d===0?'E':d>0?'+'+d:String(d)}
+function hasRound(){return state.players&&state.players.length>0}
+
+function show(view){
+  ['setupView','playView','scorecardView','summaryView'].forEach(v=>$('#'+v).classList.toggle('hidden',v!==view));
+  $('#nav').classList.toggle('hidden',!hasRound()||view==='setupView');
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+  if(view==='scorecardView')renderScorecard();
+  if(view==='summaryView')renderSummary();
+}
+function render(){
+  if(!hasRound()){show('setupView');return}
+  $('#courseLabel').textContent=state.course||'Tournament round';
+  $('#holeNo').textContent=state.hole+1; $('#parNo').textContent=state.pars[state.hole];
+  $('#holeScore').textContent=hs(); $('#activeName').textContent=state.players[state.active].name;
+  $('#shotNo').textContent='Shot '+(hd().shots.length+1);
+  $('#playerTabs').innerHTML=state.players.map((p,i)=>`<button data-player="${i}" class="${i===state.active?'active':''}">${escapeHTML(p.name)}<br><span class="muted">${hs(i)} this hole · ${toPar(i)}</span></button>`).join('');
+  $('#shotLog').innerHTML=hd().shots.length||hd().penalties
+    ? hd().shots.map((s,i)=>`<span class="pill">${i+1}. ${s}</span>`).join('')+(hd().penalties?`<span class="pill">Penalty +${hd().penalties}</span>`:'')
+    : '<span class="muted">No shots yet</span>';
+  document.querySelectorAll('.par').forEach(b=>b.classList.toggle('soft',Number(b.dataset.par)===state.pars[state.hole]));
+  save();
+}
+function renderScorecard(){
+  $('#scorecardCourse').textContent=state.course;
+  let html='<tr><th>Hole</th><th>Par</th>'+state.players.map(p=>`<th>${escapeHTML(p.name)}</th>`).join('')+'</tr>';
+  for(let i=0;i<18;i++){
+    html+=`<tr><td>${i+1}</td><td>${state.pars[i]}</td>`+state.players.map(p=>{const h=p.holes[i],n=h.shots.length+h.penalties;return `<td>${n||'-'}</td>`}).join('')+'</tr>';
+  }
+  html+=`<tr><th>Total</th><th>${state.pars.reduce((a,b)=>a+b,0)}</th>`+state.players.map((p,i)=>`<th>${total(i)}</th>`).join('')+'</tr>';
+  $('#scoreTable').innerHTML=html;
+}
+function statForPlayer(p){
+  let holesPlayed=0,fairways=0,gir=0,putts=0,penalties=0;
+  p.holes.forEach((h,i)=>{
+    if(h.shots.length||h.penalties) holesPlayed++;
+    if(h.shots.includes('Fairway')) fairways++;
+    if(h.shots.includes('Green')) gir++;
+    putts+=h.shots.filter(x=>x==='Putt').length;
+    penalties+=h.penalties;
+  });
+  return {holesPlayed,fairways,gir,putts,penalties};
+}
+function renderSummary(){
+  $('#summary').innerHTML=state.players.map((p,i)=>{
+    const s=statForPlayer(p); return `<div class="scoreline"><div><strong>${escapeHTML(p.name)}</strong><div class="muted">${s.holesPlayed} holes · ${s.fairways} fairways · ${s.gir} greens · ${s.putts} putts · ${s.penalties} penalties</div></div><div class="right"><div class="score">${total(i)}</div><div class="muted">${toPar(i)}</div></div></div>`
+  }).join('');
+}
+
+$('#startBtn').addEventListener('click',()=>{
+  state.course=$('#courseInput').value.trim()||'Tournament Round';
+  state.hole=Number($('#startHole').value);state.active=0;state.pars=Array(18).fill(4);
+  state.players=[$('#p1').value.trim()||'Son',$('#p2').value.trim()||'Opponent 1',$('#p3').value.trim()||'Opponent 2'].map(blankPlayer);
+  render();show('playView');
+});
+document.addEventListener('click',e=>{
+  const player=e.target.closest('[data-player]'); if(player){state.active=Number(player.dataset.player);render()}
+  const shot=e.target.closest('[data-shot]'); if(shot){hd().shots.push(shot.dataset.shot);render()}
+  const par=e.target.closest('[data-par]'); if(par){state.pars[state.hole]=Number(par.dataset.par);render()}
+  const nav=e.target.closest('#nav [data-view]'); if(nav)show(nav.dataset.view);
+});
+$('#penaltyBtn').addEventListener('click',()=>{hd().penalties++;render()});
+$('#undoBtn').addEventListener('click',()=>{const h=hd();if(h.penalties>0)h.penalties--;else h.shots.pop();render()});
+$('#nextHole').addEventListener('click',()=>{state.hole=Math.min(17,state.hole+1);render()});
+$('#prevHole').addEventListener('click',()=>{state.hole=Math.max(0,state.hole-1);render()});
+$('#newRoundBtn').addEventListener('click',()=>show('setupView'));
+$('#clearBtn').addEventListener('click',()=>{localStorage.removeItem(KEY);location.reload()});
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+if(hasRound()){render();show('playView')}else show('setupView');
+</script>
+</body>
+</html>
