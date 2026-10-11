@@ -1,10 +1,10 @@
 const CACHE_PREFIX = 'tournament-golf-tracker-';
-const CACHE = CACHE_PREFIX + 'v2';
+const CACHE = CACHE_PREFIX + 'v3';
 const BASE = new URL('./', self.location.href);
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(

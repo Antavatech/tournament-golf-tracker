@@ -19,7 +19,7 @@
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     button,input,select{font:inherit}
-    .app{max-width:760px;margin:auto;padding:env(safe-area-inset-top) 14px calc(20px + env(safe-area-inset-bottom))}
+    .app{max-width:1060px;margin:auto;padding:env(safe-area-inset-top) 14px calc(20px + env(safe-area-inset-bottom))}
     header{display:flex;align-items:center;justify-content:space-between;padding:14px 2px}
     h1{font-size:21px;margin:0}.sub{font-size:13px;color:var(--muted)}
     .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
@@ -30,8 +30,16 @@
     button.danger{color:var(--danger)}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .player-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-    .player-tabs button.active{background:var(--accent2);border-color:#86efac}
+    .players{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .player-card{min-width:0;padding:12px;text-align:center}
+    .player-name{font-size:18px;margin:0 0 4px;overflow-wrap:anywhere}
+    .player-actions{display:grid;gap:6px;margin-top:10px}
+    .player-actions button{width:100%}
+    .player-card .shotlog{max-height:90px;overflow:auto;margin-top:8px;text-align:left}
+    .file-tools{margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px}
+    .file-tools button{flex:1}
+    #fileStatus{flex-basis:100%;margin:0}
+    .version{font-size:12px;font-weight:500;color:var(--muted)}
     .big{font-size:34px;font-weight:800;line-height:1}.score{font-size:32px;font-weight:800}
     .muted{color:var(--muted);font-size:13px}
     .shotlog{display:flex;gap:6px;flex-wrap:wrap}.pill{background:#f3f4f6;border-radius:999px;padding:7px 10px;font-size:13px}
@@ -42,24 +50,38 @@
     .nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;position:sticky;bottom:0;background:rgba(244,245,247,.94);padding:8px 0 4px;backdrop-filter:blur(12px)}
     .nav button.active{background:#111827;color:white}
     table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #eee;text-align:center}th:first-child,td:first-child{text-align:left}
-    @media(max-width:420px){.grid{grid-template-columns:repeat(2,1fr)}.player-tabs{grid-template-columns:1fr}.player-tabs button{min-height:42px}}
+    @media(max-width:480px){
+      .app{padding-left:8px;padding-right:8px}h1{font-size:18px}
+      .players{gap:6px}.player-card{padding:8px 5px;border-radius:12px}
+      .player-name{font-size:14px}.player-card .muted{font-size:11px}
+      .player-actions button{font-size:13px;padding:6px 3px;min-height:44px;border-radius:9px}
+      .player-card .pill{font-size:11px;padding:4px 5px}
+      .hole-controls{gap:6px}.hole-controls button{padding:8px}
+    }
   </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker</h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
+  <div class="file-tools">
+    <button id="saveFileBtn" class="primary" disabled>Save Round</button>
+    <button id="csvBtn" disabled>Export CSV</button>
+    <button id="loadFileBtn">Load Round</button>
+    <input type="file" id="roundFile" accept=".json,application/json" class="hidden" aria-label="Load round file">
+    <p id="fileStatus" class="muted" role="status">Save Round downloads a backup file. Load Round restores it.</p>
+  </div>
   <section id="setupView">
     <div class="card">
       <div class="big">Start a round</div>
       <p class="muted">Enter the course and up to three golfers. Your round is saved automatically on this device.</p>
       <label>Course</label><input id="courseInput" placeholder="Course name">
-      <label>Your son</label><input id="p1" value="Son">
-      <label>Opponent 1</label><input id="p2" value="Opponent 1">
-      <label>Opponent 2</label><input id="p3" value="Opponent 2">
+      <label for="p1">Player 1</label><input id="p1" value="Player 1">
+      <label for="p2">Player 2</label><input id="p2" value="Player 2">
+      <label for="p3">Player 3</label><input id="p3" value="Player 3">
       <label>Starting hole</label>
       <select id="startHole"></select>
       <button class="primary" id="startBtn" style="width:100%;margin-top:12px">Start Round</button>
@@ -68,40 +90,15 @@
 
   <section id="playView" class="hidden">
     <div class="card">
-      <div class="row">
-        <div class="grow"><div class="muted">Current hole</div><div><span class="big" id="holeNo">1</span> <span class="muted">Par <span id="parNo">4</span></span></div></div>
-        <div class="right"><div class="muted">Hole score</div><div class="score" id="holeScore">0</div></div>
+      <div class="row hole-controls">
+        <div class="grow"><strong>Hole <span id="holeNo">1</span></strong> <span class="muted">Par <span id="parNo">4</span></span></div>
+        <button id="prevHole" aria-label="Previous hole">← Hole</button><button id="nextHole" class="primary">Next Hole →</button>
       </div>
-      <div class="row" style="margin-top:10px">
-        <button id="prevHole">← Hole</button><button id="nextHole" class="primary">Next Hole →</button>
-      </div>
-    </div>
-
-    <div id="playerTabs" class="player-tabs" style="margin-bottom:12px"></div>
-
-    <div class="card">
-      <div class="row"><div class="grow"><div id="activeName" style="font-size:20px;font-weight:800"></div><div class="muted" id="shotNo">Shot 1</div></div></div>
-      <div class="grid" style="margin-top:12px">
-        <button class="shot" data-shot="Fairway">Fairway</button>
-        <button class="shot" data-shot="Rough">Rough</button>
-        <button class="shot" data-shot="Green">Green</button>
-        <button class="shot" data-shot="Bunker">Bunker</button>
-        <button class="shot" data-shot="Putt">Putt</button>
-        <button class="shot" data-shot="Other">Other</button>
-      </div>
-      <div class="grid2" style="margin-top:8px">
-        <button id="penaltyBtn">+ Penalty</button><button id="undoBtn">Undo</button>
-      </div>
-      <div class="muted" style="margin-top:12px">Shots this hole</div>
-      <div id="shotLog" class="shotlog" style="margin-top:7px"></div>
-    </div>
-
-    <div class="card">
-      <div class="row"><strong>Hole par</strong></div>
-      <div class="grid" style="margin-top:8px">
+      <div class="grid" style="margin-top:8px" aria-label="Hole par">
         <button class="par" data-par="3">Par 3</button><button class="par" data-par="4">Par 4</button><button class="par" data-par="5">Par 5</button>
       </div>
     </div>
+    <div id="playerCards" class="players"></div>
   </section>
 
   <section id="scorecardView" class="hidden">
@@ -129,14 +126,16 @@
 </div>
 
 <script>
+const SHOT_TYPES=['Fairway','Rough','Green','Bunker','Putt','Other'];
 const KEY='tournament-golf-tracker-v1';
 const $=s=>document.querySelector(s);
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const state=load()||{course:'',hole:0,pars:Array(18).fill(4),active:0,players:[]};
+if(state.players?.length) state.players.forEach(p=>p.holes.forEach(h=>{if(!h.actions)h.actions=[...h.shots.map(()=> 'shot'),...Array(h.penalties).fill('penalty')]}));
 
 for(let i=1;i<=18;i++){const o=document.createElement('option');o.value=i-1;o.textContent='Hole '+i;$('#startHole').appendChild(o)}
 
-function blankPlayer(name){return {name,holes:Array.from({length:18},()=>({shots:[],penalties:0}))}}
+function blankPlayer(name){return {name,holes:Array.from({length:18},()=>({shots:[],penalties:0,actions:[]}))}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}}
 function hd(pi=state.active){return state.players[pi].holes[state.hole]}
@@ -154,15 +153,24 @@ function show(view){
   if(view==='summaryView')renderSummary();
 }
 function render(){
-  if(!hasRound()){show('setupView');return}
+  if(!hasRound()){ $('#saveFileBtn').disabled=true; $('#csvBtn').disabled=true; $('#courseLabel').textContent='New round'; show('setupView');return}
   $('#courseLabel').textContent=state.course||'Tournament round';
   $('#holeNo').textContent=state.hole+1; $('#parNo').textContent=state.pars[state.hole];
-  $('#holeScore').textContent=hs(); $('#activeName').textContent=state.players[state.active].name;
-  $('#shotNo').textContent='Shot '+(hd().shots.length+1);
-  $('#playerTabs').innerHTML=state.players.map((p,i)=>`<button data-player="${i}" class="${i===state.active?'active':''}">${escapeHTML(p.name)}<br><span class="muted">${hs(i)} this hole · ${toPar(i)}</span></button>`).join('');
-  $('#shotLog').innerHTML=hd().shots.length||hd().penalties
-    ? hd().shots.map((s,i)=>`<span class="pill">${i+1}. ${s}</span>`).join('')+(hd().penalties?`<span class="pill">Penalty +${hd().penalties}</span>`:'')
-    : '<span class="muted">No shots yet</span>';
+  $('#saveFileBtn').disabled=false; $('#csvBtn').disabled=false;
+  $('#playerCards').innerHTML=state.players.map((p,i)=>{
+    const h=hd(i);
+    const log=h.shots.map((shot,n)=>`<span class="pill">${n+1}. ${escapeHTML(shot)}</span>`).join('')+(h.penalties?`<span class="pill">Penalty +${h.penalties}</span>`:'');
+    return `<article class="card player-card" aria-label="${escapeHTML(p.name)} tracker">
+      <h2 class="player-name">${escapeHTML(p.name)}</h2>
+      <div class="score" aria-label="Hole score">${hs(i)}</div>
+      <div class="muted">Hole score · Total ${total(i)}</div>
+      <div class="muted">Next: shot ${h.shots.length+1}</div>
+      <div class="player-actions">${SHOT_TYPES.map(shot=>`<button data-shot="${shot}" data-pi="${i}" aria-label="${escapeHTML(p.name)}: ${shot}">${shot}</button>`).join('')}
+      <button data-penalty="${i}" aria-label="${escapeHTML(p.name)}: add penalty">+ Penalty</button>
+      <button data-undo="${i}" aria-label="${escapeHTML(p.name)}: undo" ${!h.shots.length&&!h.penalties?'disabled':''}>Undo</button></div>
+      <div class="shotlog">${log||'<span class="muted">No shots yet</span>'}</div>
+    </article>`;
+  }).join('');
   document.querySelectorAll('.par').forEach(b=>b.classList.toggle('soft',Number(b.dataset.par)===state.pars[state.hole]));
   save();
 }
@@ -193,24 +201,69 @@ function renderSummary(){
 }
 
 $('#startBtn').addEventListener('click',()=>{
+  if(hasRound()&&!confirm('Start a new round and replace the round on this device? Use Save Round first to keep a file.'))return;
+  state.startedAt=new Date().toISOString();
   state.course=$('#courseInput').value.trim()||'Tournament Round';
   state.hole=Number($('#startHole').value);state.active=0;state.pars=Array(18).fill(4);
-  state.players=[$('#p1').value.trim()||'Son',$('#p2').value.trim()||'Opponent 1',$('#p3').value.trim()||'Opponent 2'].map(blankPlayer);
+  state.players=[$('#p1').value.trim()||'Player 1',$('#p2').value.trim()||'Player 2',$('#p3').value.trim()||'Player 3'].map(blankPlayer);
   render();show('playView');
 });
 document.addEventListener('click',e=>{
-  const player=e.target.closest('[data-player]'); if(player){state.active=Number(player.dataset.player);render()}
-  const shot=e.target.closest('[data-shot]'); if(shot){hd().shots.push(shot.dataset.shot);render()}
+  const shot=e.target.closest('[data-shot]'); if(shot){const h=hd(Number(shot.dataset.pi));h.shots.push(shot.dataset.shot);(h.actions||(h.actions=[])).push('shot');render()}
+  const penalty=e.target.closest('[data-penalty]'); if(penalty){const h=hd(Number(penalty.dataset.penalty));h.penalties++;(h.actions||(h.actions=[])).push('penalty');render()}
+  const undo=e.target.closest('[data-undo]'); if(undo){const h=hd(Number(undo.dataset.undo)); const action=(h.actions||[]).pop(); if(action==='penalty')h.penalties--;else if(action==='shot')h.shots.pop();else if(h.penalties)h.penalties--;else h.shots.pop();render()}
   const par=e.target.closest('[data-par]'); if(par){state.pars[state.hole]=Number(par.dataset.par);render()}
   const nav=e.target.closest('#nav [data-view]'); if(nav)show(nav.dataset.view);
 });
-$('#penaltyBtn').addEventListener('click',()=>{hd().penalties++;render()});
-$('#undoBtn').addEventListener('click',()=>{const h=hd();if(h.penalties>0)h.penalties--;else h.shots.pop();render()});
 $('#nextHole').addEventListener('click',()=>{state.hole=Math.min(17,state.hole+1);render()});
 $('#prevHole').addEventListener('click',()=>{state.hole=Math.max(0,state.hole-1);render()});
 $('#newRoundBtn').addEventListener('click',()=>show('setupView'));
-$('#clearBtn').addEventListener('click',()=>{localStorage.removeItem(KEY);location.reload()});
+$('#clearBtn').addEventListener('click',()=>{if(confirm('Clear this device’s saved round? Download a round file first if you want to keep it.')){localStorage.removeItem(KEY);location.reload()}});
 
+function roundBackup(){return {format:'tournament-golf-tracker',version:2,savedAt:new Date().toISOString(),round:state}}
+function roundFilename(extension){
+  const course=state.course.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').slice(0,60)||'round';
+  return 'golf-'+course+'-'+new Date().toISOString().replace(/[:.]/g,'-')+'.'+extension;
+}
+function downloadFile(content,type,filename){
+  const url=URL.createObjectURL(new Blob([content],{type}));
+  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  $('#fileStatus').textContent='File download requested: '+filename+'. Check Downloads or use your browser’s save option.';
+}
+function csvText(){
+  const rows=[['Course','Player','Hole','Par','Score','Penalties','Shots']];
+  state.players.forEach(p=>p.holes.forEach((h,i)=>rows.push([state.course,p.name,i+1,state.pars[i],h.shots.length||h.penalties?h.shots.length+h.penalties:'',h.penalties,h.shots.join(' > ')])));
+  return '\ufeff'+rows.map(row=>row.map(value=>{let text=String(value);if(/^[=+@\-\t\r]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"'}).join(',')).join('\r\n');
+}
+function validateRoundFile(data){
+  if(!data||data.format!=='tournament-golf-tracker'||data.version!==2)throw new Error('Choose a Golf Tracker round JSON file.');
+  const r=data.round;
+  if(!r||typeof r.course!=='string'||r.course.length>500||!Number.isInteger(r.hole)||r.hole<0||r.hole>17||!Array.isArray(r.pars)||r.pars.length!==18||!r.pars.every(p=>[3,4,5].includes(p))||!Array.isArray(r.players)||r.players.length<1||r.players.length>3)throw new Error('This round file has invalid round details.');
+  const players=r.players.map(p=>{
+    if(!p||typeof p.name!=='string'||p.name.length>200||!Array.isArray(p.holes)||p.holes.length!==18)throw new Error('This round file has invalid player details.');
+    return {name:p.name,holes:p.holes.map(h=>{
+      if(!h||!Array.isArray(h.shots)||h.shots.length>1000||!h.shots.every(s=>SHOT_TYPES.includes(s))||!Number.isInteger(h.penalties)||h.penalties<0||h.penalties>1000)throw new Error('This round file has invalid shot details.');
+      const validActions=Array.isArray(h.actions)&&h.actions.every(a=>a==='shot'||a==='penalty')&&h.actions.filter(a=>a==='shot').length===h.shots.length&&h.actions.filter(a=>a==='penalty').length===h.penalties;
+      return {shots:[...h.shots],penalties:h.penalties,actions:validActions?[...h.actions]:[...h.shots.map(()=> 'shot'),...Array(h.penalties).fill('penalty')]};
+    })};
+  });
+  return {course:r.course,hole:r.hole,pars:[...r.pars],active:0,players,startedAt:typeof r.startedAt==='string'?r.startedAt:undefined};
+}
+$('#saveFileBtn').addEventListener('click',()=>{if(hasRound())downloadFile(JSON.stringify(roundBackup(),null,2),'application/json',roundFilename('json'))});
+$('#csvBtn').addEventListener('click',()=>{if(hasRound())downloadFile(csvText(),'text/csv;charset=utf-8',roundFilename('csv'))});
+$('#loadFileBtn').addEventListener('click',()=>$('#roundFile').click());
+$('#roundFile').addEventListener('change',async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    if(file.size>2*1024*1024)throw new Error('Choose a round file smaller than 2 MB.');
+    const restored=validateRoundFile(JSON.parse(await file.text()));
+    if(hasRound()&&!confirm('Load this file and replace the round on this device? Save your current round first if needed.'))return;
+    Object.keys(state).forEach(key=>delete state[key]);Object.assign(state,restored);render();show('playView');
+    $('#fileStatus').textContent='Loaded '+file.name;
+  }catch(error){$('#fileStatus').textContent='Unable to load round: '+error.message}
+  finally{e.target.value=''}
+});
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 if(hasRound()){render();show('playView')}else show('setupView');
 </script>

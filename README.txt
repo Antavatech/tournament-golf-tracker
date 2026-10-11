@@ -1,18 +1,12 @@
-Tournament Golf Tracker — installable PWA
+# Tournament Golf Tracker — v2
 
-Track shots, penalties, and scores for your son and two opponents.
-The current round saves automatically on this device. Data is not synced
-between devices or uploaded to GitHub. Clearing browser data removes it.
+Track all three players on the same screen. Each player has independent shot, penalty, undo, and score controls.
 
-Publish on GitHub Pages:
-1. Create a public repository named tournament-golf-tracker.
-2. Upload this folder's contents to its main branch (index.html at the root).
-3. Settings > Pages > Deploy from a branch > main > / (root) > Save.
+- **Save Round** downloads a JSON backup containing all players, shots, penalties, pars, and current hole. Keep it in Downloads or save it to Files on iPhone/iPad.
+- **Load Round** restores a saved JSON backup, including on another device.
+- **Export CSV** downloads a spreadsheet-friendly record of all holes and shots.
+- Rounds also save automatically in this browser; there is no cloud synchronization.
 
-Install:
-iPhone/iPad: Open the published HTTPS site in Safari, then Share >
-Add to Home Screen. Enable Open as Web App if offered.
-Android/desktop: Open in Chrome or Edge and use the browser's Install app option.
-Load online once before using offline. Keep the same browser for saved rounds.
+Open in Safari and choose Share → Add to Home Screen to install on iPhone/iPad. Load online before using offline. Close and reopen the app after an update if the old interface remains.
 
-Local testing: serve this directory with a local HTTP server.
+The original published version is preserved on the `v1` branch at commit `5090c1ee839c67df286dc0cb2632d0b8bde191e6`.
