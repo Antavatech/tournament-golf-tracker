@@ -1,4 +1,4 @@
-# Tournament Golf Tracker — v2
+# Tournament Golf Tracker — v2.1
 
 Track all three players on the same screen. Each player has independent shot, penalty, undo, and score controls.
 
@@ -10,3 +10,6 @@ Track all three players on the same screen. Each player has independent shot, pe
 Open in Safari and choose Share → Add to Home Screen to install on iPhone/iPad. Load online before using offline. Close and reopen the app after an update if the old interface remains.
 
 The original published version is preserved on the `v1` branch at commit `5090c1ee839c67df286dc0cb2632d0b8bde191e6`.
+
+Course preset: Hopewell Valley Golf Club, Blue tees, par 72, 6,612 yards. Source: https://golfmercercounty.com/wp-content/uploads/2025/03/196189_proofV1.pdf
+Course and tee details are included in saved JSON and CSV files.

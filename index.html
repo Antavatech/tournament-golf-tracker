@@ -63,7 +63,7 @@
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker <span class="version">v2</span></h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2.1</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
@@ -78,7 +78,10 @@
     <div class="card">
       <div class="big">Start a round</div>
       <p class="muted">Enter the course and up to three golfers. Your round is saved automatically on this device.</p>
-      <label>Course</label><input id="courseInput" placeholder="Course name">
+      <label for="coursePreset">Course preset</label>
+      <select id="coursePreset"><option value="hopewell-blue">Hopewell Valley Golf Club — Blue tees</option><option value="custom">Custom course</option></select>
+      <p class="muted" id="presetInfo">Blue tees · Par 72 · 6,612 yards. Pars and yardages load automatically.</p>
+      <label for="courseInput">Course</label><input id="courseInput" placeholder="Course name" value="Hopewell Valley Golf Club" readonly>
       <label for="p1">Player 1</label><input id="p1" value="Player 1">
       <label for="p2">Player 2</label><input id="p2" value="Player 2">
       <label for="p3">Player 3</label><input id="p3" value="Player 3">
@@ -91,7 +94,7 @@
   <section id="playView" class="hidden">
     <div class="card">
       <div class="row hole-controls">
-        <div class="grow"><strong>Hole <span id="holeNo">1</span></strong> <span class="muted">Par <span id="parNo">4</span></span></div>
+        <div class="grow"><strong>Hole <span id="holeNo">1</span></strong> <span class="muted">Par <span id="parNo">4</span> <span id="holeYardage"></span></span></div>
         <button id="prevHole" aria-label="Previous hole">← Hole</button><button id="nextHole" class="primary">Next Hole →</button>
       </div>
       <div class="grid" style="margin-top:8px" aria-label="Hole par">
@@ -126,6 +129,10 @@
 </div>
 
 <script>
+const HOPEWELL_BLUE={name:'Hopewell Valley Golf Club',tee:'Blue',
+  pars:[4,4,3,5,4,4,5,4,3,4,4,4,3,4,4,5,3,5],
+  yardages:[374,381,166,476,432,396,495,400,132,389,404,356,175,352,414,491,209,570],
+  source:'https://golfmercercounty.com/wp-content/uploads/2025/03/196189_proofV1.pdf'};
 const SHOT_TYPES=['Fairway','Rough','Green','Bunker','Putt','Other'];
 const KEY='tournament-golf-tracker-v1';
 const $=s=>document.querySelector(s);
@@ -154,8 +161,9 @@ function show(view){
 }
 function render(){
   if(!hasRound()){ $('#saveFileBtn').disabled=true; $('#csvBtn').disabled=true; $('#courseLabel').textContent='New round'; show('setupView');return}
-  $('#courseLabel').textContent=state.course||'Tournament round';
+  $('#courseLabel').textContent=(state.course||'Tournament round')+(state.tee?' · '+state.tee+' tees':'');
   $('#holeNo').textContent=state.hole+1; $('#parNo').textContent=state.pars[state.hole];
+  $('#holeYardage').textContent=state.yardages?.[state.hole]?' · '+state.yardages[state.hole]+' yd':'';
   $('#saveFileBtn').disabled=false; $('#csvBtn').disabled=false;
   $('#playerCards').innerHTML=state.players.map((p,i)=>{
     const h=hd(i);
@@ -175,12 +183,13 @@ function render(){
   save();
 }
 function renderScorecard(){
-  $('#scorecardCourse').textContent=state.course;
-  let html='<tr><th>Hole</th><th>Par</th>'+state.players.map(p=>`<th>${escapeHTML(p.name)}</th>`).join('')+'</tr>';
+  $('#scorecardCourse').textContent=state.course+(state.tee?' · '+state.tee+' tees':'');
+  const hasYards=Array.isArray(state.yardages);
+  let html='<tr><th>Hole</th><th>Par</th>'+(hasYards?'<th>Yards</th>':'')+state.players.map(p=>`<th>${escapeHTML(p.name)}</th>`).join('')+'</tr>';
   for(let i=0;i<18;i++){
-    html+=`<tr><td>${i+1}</td><td>${state.pars[i]}</td>`+state.players.map(p=>{const h=p.holes[i],n=h.shots.length+h.penalties;return `<td>${n||'-'}</td>`}).join('')+'</tr>';
+    html+=`<tr><td>${i+1}</td><td>${state.pars[i]}</td>`+(hasYards?`<td>${state.yardages[i]}</td>`:'')+state.players.map(p=>{const h=p.holes[i],n=h.shots.length+h.penalties;return `<td>${n||'-'}</td>`}).join('')+'</tr>';
   }
-  html+=`<tr><th>Total</th><th>${state.pars.reduce((a,b)=>a+b,0)}</th>`+state.players.map((p,i)=>`<th>${total(i)}</th>`).join('')+'</tr>';
+  html+=`<tr><th>Total</th><th>${state.pars.reduce((a,b)=>a+b,0)}</th>`+(hasYards?`<th>${state.yardages.reduce((a,b)=>a+b,0)}</th>`:'')+state.players.map((p,i)=>`<th>${total(i)}</th>`).join('')+'</tr>';
   $('#scoreTable').innerHTML=html;
 }
 function statForPlayer(p){
@@ -200,11 +209,21 @@ function renderSummary(){
   }).join('');
 }
 
+$('#coursePreset').addEventListener('change',()=>{
+  const preset=$('#coursePreset').value==='hopewell-blue';
+  $('#courseInput').readOnly=preset;
+  $('#courseInput').value=preset?HOPEWELL_BLUE.name:'';
+  $('#presetInfo').textContent=preset?'Blue tees · Par 72 · 6,612 yards. Pars and yardages load automatically.':'Enter your course name and set each hole’s par while tracking.';
+});
 $('#startBtn').addEventListener('click',()=>{
   if(hasRound()&&!confirm('Start a new round and replace the round on this device? Use Save Round first to keep a file.'))return;
   state.startedAt=new Date().toISOString();
   state.course=$('#courseInput').value.trim()||'Tournament Round';
-  state.hole=Number($('#startHole').value);state.active=0;state.pars=Array(18).fill(4);
+  state.hole=Number($('#startHole').value);state.active=0;
+  const preset=$('#coursePreset').value==='hopewell-blue';
+  state.pars=preset?[...HOPEWELL_BLUE.pars]:Array(18).fill(4);
+  if(preset){state.course=HOPEWELL_BLUE.name;state.tee=HOPEWELL_BLUE.tee;state.yardages=[...HOPEWELL_BLUE.yardages];state.courseSource=HOPEWELL_BLUE.source}
+  else{delete state.tee;delete state.yardages;delete state.courseSource}
   state.players=[$('#p1').value.trim()||'Player 1',$('#p2').value.trim()||'Player 2',$('#p3').value.trim()||'Player 3'].map(blankPlayer);
   render();show('playView');
 });
@@ -232,8 +251,8 @@ function downloadFile(content,type,filename){
   $('#fileStatus').textContent='File download requested: '+filename+'. Check Downloads or use your browser’s save option.';
 }
 function csvText(){
-  const rows=[['Course','Player','Hole','Par','Score','Penalties','Shots']];
-  state.players.forEach(p=>p.holes.forEach((h,i)=>rows.push([state.course,p.name,i+1,state.pars[i],h.shots.length||h.penalties?h.shots.length+h.penalties:'',h.penalties,h.shots.join(' > ')])));
+  const rows=[['Course','Tees','Player','Hole','Par','Yards','Score','Penalties','Shots']];
+  state.players.forEach(p=>p.holes.forEach((h,i)=>rows.push([state.course,state.tee||'',p.name,i+1,state.pars[i],state.yardages?.[i]||'',h.shots.length||h.penalties?h.shots.length+h.penalties:'',h.penalties,h.shots.join(' > ')])));
   return '\ufeff'+rows.map(row=>row.map(value=>{let text=String(value);if(/^[=+@\-\t\r]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"'}).join(',')).join('\r\n');
 }
 function validateRoundFile(data){
@@ -248,7 +267,14 @@ function validateRoundFile(data){
       return {shots:[...h.shots],penalties:h.penalties,actions:validActions?[...h.actions]:[...h.shots.map(()=> 'shot'),...Array(h.penalties).fill('penalty')]};
     })};
   });
-  return {course:r.course,hole:r.hole,pars:[...r.pars],active:0,players,startedAt:typeof r.startedAt==='string'?r.startedAt:undefined};
+  const restored={course:r.course,hole:r.hole,pars:[...r.pars],active:0,players,startedAt:typeof r.startedAt==='string'?r.startedAt:undefined};
+  if(r.yardages!==undefined){
+    if(!Array.isArray(r.yardages)||r.yardages.length!==18||!r.yardages.every(y=>Number.isInteger(y)&&y>0&&y<=1000))throw new Error('Invalid course yardages.');
+    restored.yardages=[...r.yardages];
+  }
+  if(typeof r.tee==='string'&&r.tee.length<=100)restored.tee=r.tee;
+  if(typeof r.courseSource==='string'&&r.courseSource.startsWith('https://')&&r.courseSource.length<=1000)restored.courseSource=r.courseSource;
+  return restored;
 }
 $('#saveFileBtn').addEventListener('click',()=>{if(hasRound())downloadFile(JSON.stringify(roundBackup(),null,2),'application/json',roundFilename('json'))});
 $('#csvBtn').addEventListener('click',()=>{if(hasRound())downloadFile(csvText(),'text/csv;charset=utf-8',roundFilename('csv'))});
