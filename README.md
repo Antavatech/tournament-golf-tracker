@@ -21,3 +21,11 @@ Use **Save to GitHub** to save the current round as a JSON file under `rounds/` 
 Open **Connect GitHub** in the app. Create a fine-grained personal access token in GitHub Settings → Developer settings → Personal access tokens, limited to this repository with **Contents: Read and write** and an expiration date. Paste the token into the app and connect. The token remains only in page memory until the page closes or reloads; it is never persisted in browser storage or included in round files. The ChatGPT GitHub connection does not authorize writes from the independently hosted app.
 
 Saved rounds are public in the current repository. A successful save displays a link to its file; failed saves retain the round on the device. **Save Round** continues to download a local backup. While offline, use local tracking and save to GitHub after reconnecting.
+
+## Automatic saving (v2.8)
+
+Every change immediately saves the current round and pending GitHub backups to browser storage. After connecting GitHub, pending changes upload automatically about every 15 seconds, without repeated Save taps. Saving manually flushes pending rounds immediately. Each round retains its own JSON file on the **round-data** branch, so saving scores does not deploy the Pages app. This branch started from main to retain any previously saved files.
+
+The durable queue preserves unsynced rounds when starting another round or reopening the app. Network failures retry with increasing delays; coming online retries immediately. GitHub authorization failures pause automatic requests and display an actionable status. Connect again after reopening or reloading the app because the token is kept only in memory. Mobile browsers may suspend background activity; GitHub uploading is best effort when the app becomes hidden and resumes on return. The local queue is the recovery path, not a promise of continuous background uploads.
+
+Tests: `node tests/autosave.cjs` verifies local persistence, automatic batching, offline recovery across restarts, per-round files, edits during upload, retries, invalid credentials, and credential isolation using simulated GitHub responses.

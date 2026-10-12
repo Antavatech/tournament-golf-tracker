@@ -79,7 +79,7 @@
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker <span class="version">v2.7</span></h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2.8</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
@@ -150,11 +150,12 @@
   </div>
   <div class="github-tools">
     <button id="saveGithubBtn" disabled>Save to GitHub</button>
-    <p id="githubStatus" class="muted" role="status" aria-live="polite">Each round gets a separate file. Saving again updates that round.</p>
+    <p id="localSaveStatus" class="muted" role="status">Every change saves on this device.</p>
+    <p id="githubStatus" class="muted" role="status" aria-live="polite">Connect GitHub to automatically back up changes while you play.</p>
     <details id="githubConnection">
       <summary>Connect GitHub</summary>
       <div class="card" style="margin-top:8px">
-        <p class="muted">Save to Antavatech/tournament-golf-tracker in the rounds folder. Saved rounds will be public.</p>
+        <p class="muted">Save to Antavatech/tournament-golf-tracker in the rounds folder on the round-data branch. Saved rounds will be public.</p>
         <p class="muted">In GitHub, open Settings → Developer settings → Personal access tokens → Fine-grained tokens. Create a token for only tournament-golf-tracker, with Contents set to Read and write. Choose an expiration date.</p>
         <label for="githubToken">GitHub token</label>
         <input id="githubToken" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste your token here">
@@ -186,7 +187,10 @@ function displayRoundDate(){
 }
 const KEY='tournament-golf-tracker-v1';
 const GITHUB_REPO='Antavatech/tournament-golf-tracker';
-let githubToken='',githubSaving=false;
+const GITHUB_BRANCH='round-data',PENDING_KEY=KEY+'-pending';
+let githubToken='',githubSaving=false,githubTimer=null,retryDelay=15000,githubPaused=false;
+let lastLocalSnapshot='',lastGithubSave='',lastGithubPath='';
+const pendingRounds=readPendingRounds();
 function newRoundId(){return crypto.randomUUID()}
 function validRoundId(id){return typeof id==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(id)}
 const $=s=>document.querySelector(s);
@@ -199,7 +203,33 @@ if(state.players?.length) state.players.forEach(p=>p.holes.forEach(h=>{if(!h.act
 for(let i=1;i<=18;i++){const o=document.createElement('option');o.value=i-1;o.textContent='Hole '+i;$('#startHole').appendChild(o)}
 
 function blankPlayer(name){return {name,holes:Array.from({length:18},()=>({shots:[],penalties:0,actions:[]}))}}
-function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function readPendingRounds(){
+  try{
+    const stored=JSON.parse(localStorage.getItem(PENDING_KEY))||{};
+    const pending={};
+    for(const [id,round] of Object.entries(stored)){
+      if(validRoundId(id)&&round?.roundId===id){
+        try{pending[id]=validateRoundFile({format:'tournament-golf-tracker',version:2,round})}catch{}
+      }
+    }
+    return pending;
+  }catch{return {}}
+}
+function persistPending(){localStorage.setItem(PENDING_KEY,JSON.stringify(pendingRounds))}
+function save(){
+  const snapshot=JSON.stringify(state);
+  if(hasRound()&&snapshot!==lastLocalSnapshot){
+    pendingRounds[state.roundId]=JSON.parse(snapshot);
+    lastLocalSnapshot=snapshot;
+  }
+  try{
+    localStorage.setItem(KEY,snapshot);persistPending();
+    $('#localSaveStatus').textContent='Saved on this device · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  }catch{
+    $('#localSaveStatus').textContent='Device storage is unavailable or full. Use Save Round to download a backup.';
+  }
+  updateGithubStatus();scheduleGithubSave();
+}
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}}
 function hd(pi=state.active){return state.players[pi].holes[state.hole]}
 function hs(pi=state.active){const h=hd(pi);return h.shots.length+h.penalties}
@@ -216,7 +246,7 @@ function show(view){
   if(view==='summaryView')renderSummary();
 }
 function render(){
-  $('#saveGithubBtn').disabled=!hasRound()||githubSaving;
+  $('#saveGithubBtn').disabled=(!hasRound()&&!pendingCount())||githubSaving;
   if(!hasRound()){ $('#saveFileBtn').disabled=true; $('#csvBtn').disabled=true; $('#courseLabel').textContent='New round'; show('setupView');return}
   $('#courseLabel').textContent='Round in progress';
   $('#holeCourseName').textContent=(state.course||'Tournament round')+(state.tee?' · '+state.tee+' tees':'');
@@ -300,9 +330,9 @@ $('#prevHole').addEventListener('click',()=>{state.hole=Math.max(0,state.hole-1)
 $('#newRoundBtn').addEventListener('click',()=>show('setupView'));
 $('#clearBtn').addEventListener('click',()=>{if(confirm('Clear this device’s saved round? Download a round file first if you want to keep it.')){localStorage.removeItem(KEY);location.reload()}});
 
-function roundBackup(){return {
-  format:'tournament-golf-tracker',version:2,savedAt:new Date().toISOString(),round:state,
-  summary:{date:state.roundDate,course:state.course,tee:state.tee||'',players:state.players.map((p,i)=>({name:p.name,totalScore:total(i),holeScores:p.holes.map(h=>h.shots.length||h.penalties?h.shots.length+h.penalties:null),...statForPlayer(p)}))}
+function roundBackup(round=state){return {
+  format:'tournament-golf-tracker',version:2,savedAt:new Date().toISOString(),round,
+  summary:{date:round.roundDate,course:round.course,tee:round.tee||'',players:round.players.map(p=>({name:p.name,totalScore:p.holes.reduce((sum,h)=>sum+h.shots.length+h.penalties,0),holeScores:p.holes.map(h=>h.shots.length||h.penalties?h.shots.length+h.penalties:null),...statForPlayer(p)}))}
 }}
 function roundFilename(extension){
   const course=state.course.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').slice(0,60)||'round';
@@ -369,53 +399,101 @@ $('#connectGithubBtn').addEventListener('click',async()=>{
     const repo=await response.json();
     if(repo.permissions?.push===false)throw new Error('This token does not have write access to the repository.');
     $('#disconnectGithubBtn').disabled=false;$('#githubConnection').open=false;
-    githubMessage('Connected to GitHub. Tap Save to GitHub to save this round.');
+    githubPaused=false;retryDelay=15000;updateGithubStatus();scheduleGithubSave(0);
   }catch(error){githubToken='';githubMessage(error.name==='AbortError'?'GitHub timed out. Try connecting again.':error instanceof TypeError?'Unable to connect. Check your internet connection.':error.message)}
   finally{$('#connectGithubBtn').disabled=false}
 });
 $('#disconnectGithubBtn').addEventListener('click',()=>{
-  githubToken='';$('#githubToken').value='';$('#disconnectGithubBtn').disabled=true;
-  githubMessage('Disconnected. Your saved round files remain on GitHub.');
+  githubToken='';clearTimeout(githubTimer);githubTimer=null;$('#githubToken').value='';$('#disconnectGithubBtn').disabled=true;
+  updateGithubStatus();
 });
-async function saveRoundToGithub(){
-  if(!hasRound()||githubSaving)return;
-  if(!githubToken){$('#githubConnection').open=true;githubMessage('Connect GitHub below, then tap Save to GitHub.');$('#githubToken').focus();return}
-  if(!validRoundId(state.roundId))state.roundId=newRoundId();
-  save();
-  const filename=state.roundDate+'-'+state.roundId+'.json';
-  const filePath='rounds/'+filename;
-  const apiPath='/contents/'+filePath;
-  const snapshot=JSON.stringify(roundBackup(),null,2);
-  const bytes=new TextEncoder().encode(snapshot);
-  let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);
-  const content=btoa(binary);
-  githubSaving=true;$('#connectGithubBtn').disabled=true;$('#saveGithubBtn').disabled=true;$('#disconnectGithubBtn').disabled=true;
-  githubMessage('Saving round to GitHub…');
-  try{
-    for(let attempt=0;attempt<2;attempt++){
-      const existing=await githubRequest(apiPath+'?ref=main');
-      let sha;
-      if(existing.ok){
-        const file=await existing.json();
-        if(file.type!=='file'||!file.sha)throw new Error('The round path on GitHub is not a file.');
-        sha=file.sha;
-      }else if(existing.status!==404)throw new Error(githubError(existing.status));
-      const response=await githubRequest(apiPath,{method:'PUT',body:JSON.stringify({
-        message:(sha?'Update':'Save')+' golf round '+filename,content,branch:'main',...(sha?{sha}:{})
-      })});
-      if((response.status===409||response.status===422)&&attempt===0)continue;
-      if(!response.ok)throw new Error(githubError(response.status));
-      await response.json();
-      githubMessage('Saved to GitHub at '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+'. ');
-      const link=document.createElement('a');link.textContent='View round file';
-      link.href='https://github.com/'+GITHUB_REPO+'/blob/main/'+filePath;
-      link.target='_blank';link.rel='noopener noreferrer';$('#githubStatus').appendChild(link);
-      return;
-    }
-  }catch(error){githubMessage(error.name==='AbortError'?'GitHub timed out. Your round is still on this device; try saving again.':error instanceof TypeError?'Unable to save. Check your internet connection; your round is still on this device.':error.message)}
-  finally{githubSaving=false;$('#connectGithubBtn').disabled=false;$('#saveGithubBtn').disabled=!hasRound();$('#disconnectGithubBtn').disabled=!githubToken}
+function pendingCount(){return Object.keys(pendingRounds).length}
+function updateGithubStatus(){
+  if(githubSaving){githubMessage('Saving to GitHub… Changes continue saving on this device.');return}
+  if(!githubToken){githubMessage('Saved on this device. Connect GitHub for automatic backup'+(pendingCount()?' · '+pendingCount()+' round(s) waiting.':'.'));return}
+  if(githubPaused)return;
+  if(navigator.onLine===false){githubMessage('Offline · Changes queued on this device. GitHub backup resumes when online.');return}
+  if(pendingCount()){githubMessage('Saved on this device · GitHub backup pending for '+pendingCount()+' round(s).');return}
+  githubMessage(lastGithubSave?'All changes saved to GitHub · '+lastGithubSave+'. ':'Automatic GitHub backup connected.');
+  if(lastGithubPath){
+    const link=document.createElement('a');link.textContent='View saved round';
+    link.href='https://github.com/'+GITHUB_REPO+'/blob/'+GITHUB_BRANCH+'/'+lastGithubPath;
+    link.target='_blank';link.rel='noopener noreferrer';$('#githubStatus').appendChild(link);
+  }
 }
-$('#saveGithubBtn').addEventListener('click',saveRoundToGithub);
+function scheduleGithubSave(delay=15000){
+  if(githubTimer!==null||githubSaving||!githubToken||githubPaused||!pendingCount()||navigator.onLine===false)return;
+  githubTimer=setTimeout(()=>{githubTimer=null;void saveRoundToGithub({automatic:true})},delay);
+}
+async function saveRoundToGithub({automatic=false}={}){
+  if(githubSaving)return;
+  if(!githubToken){
+    if(!automatic){$('#githubConnection').open=true;githubMessage('Connect GitHub below to enable automatic saving.');$('#githubToken').focus()}
+    return;
+  }
+  if(navigator.onLine===false){updateGithubStatus();return}
+  clearTimeout(githubTimer);githubTimer=null;
+  if(!automatic){githubPaused=false;if(hasRound())save()}
+  if(!pendingCount()){updateGithubStatus();return}
+  clearTimeout(githubTimer);githubTimer=null;
+  // Snapshot the queue; newer edits stay queued until their own upload succeeds.
+  const batch=Object.entries(pendingRounds).map(([id,round])=>[id,JSON.stringify(round)]);
+  githubSaving=true;$('#connectGithubBtn').disabled=true;$('#saveGithubBtn').disabled=true;$('#disconnectGithubBtn').disabled=true;
+  updateGithubStatus();
+  let failed=false;
+  try{
+    for(const [id,serialized] of batch){
+      const round=JSON.parse(serialized);
+      const filename=round.roundDate+'-'+id+'.json';
+      const filePath='rounds/'+filename,apiPath='/contents/'+filePath;
+      const bytes=new TextEncoder().encode(JSON.stringify(roundBackup(round),null,2));
+      let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);
+      const content=btoa(binary);
+      for(let attempt=0;attempt<2;attempt++){
+        const existing=await githubRequest(apiPath+'?ref='+GITHUB_BRANCH);
+        let sha;
+        if(existing.ok){
+          const file=await existing.json();
+          if(file.type!=='file'||!file.sha)throw new Error('The round path on GitHub is not a file.');
+          sha=file.sha;
+        }else if(existing.status!==404){
+          const error=new Error(githubError(existing.status));error.status=existing.status;throw error;
+        }
+        const response=await githubRequest(apiPath,{method:'PUT',body:JSON.stringify({
+          message:(sha?'Update':'Save')+' golf round '+filename,content,branch:GITHUB_BRANCH,...(sha?{sha}:{})
+        })});
+        if((response.status===409||response.status===422)&&attempt===0)continue;
+        if(!response.ok){const error=new Error(githubError(response.status));error.status=response.status;throw error}
+        await response.json();
+        if(JSON.stringify(pendingRounds[id])===serialized)delete pendingRounds[id];
+        persistPending();
+        lastGithubSave=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});lastGithubPath=filePath;
+        break;
+      }
+    }
+    retryDelay=15000;
+  }catch(error){
+    failed=true;
+    // Authorization and validation errors need attention; network/server failures retry.
+    if([401,403,404,422].includes(error.status))githubPaused=true;
+    retryDelay=Math.min(retryDelay*2,120000);
+    const reason=error.name==='AbortError'?'GitHub timed out.':error instanceof TypeError?'Connection interrupted.':error.message;
+    githubMessage(reason+' Changes remain queued on this device. '+(githubPaused?'Check your connection settings, then tap Save to GitHub.':'Automatic retry pending.'));
+  }finally{
+    githubSaving=false;$('#connectGithubBtn').disabled=false;$('#saveGithubBtn').disabled=!hasRound()&&!pendingCount();$('#disconnectGithubBtn').disabled=!githubToken;
+    if(!failed)updateGithubStatus();scheduleGithubSave(failed?retryDelay:15000);
+  }
+}
+$('#saveGithubBtn').addEventListener('click',()=>saveRoundToGithub());
+window.addEventListener('online',()=>{updateGithubStatus();scheduleGithubSave(0)});
+window.addEventListener('offline',updateGithubStatus);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    if(hasRound())save();
+    // Best effort: the phone may suspend the page. The durable queue survives that.
+    if(githubToken&&!githubPaused)void saveRoundToGithub({automatic:true});
+  }else{updateGithubStatus();scheduleGithubSave(0)}
+});
 $('#saveFileBtn').addEventListener('click',()=>{if(hasRound())downloadFile(JSON.stringify(roundBackup(),null,2),'application/json',roundFilename('json'))});
 $('#csvBtn').addEventListener('click',()=>{if(hasRound())downloadFile(csvText(),'text/csv;charset=utf-8',roundFilename('csv'))});
 $('#loadFileBtn').addEventListener('click',()=>$('#roundFile').click());
@@ -431,7 +509,7 @@ $('#roundFile').addEventListener('change',async e=>{
   finally{e.target.value=''}
 });
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
-if(hasRound()){render();show('playView')}else show('setupView');
+if(hasRound()){render();show('playView')}else{show('setupView');updateGithubStatus();$('#saveGithubBtn').disabled=!pendingCount()}
 </script>
 </body>
 </html>
