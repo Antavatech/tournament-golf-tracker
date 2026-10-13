@@ -45,3 +45,11 @@ Added Harkers Hollow Golf Club, 950 Uniontown Rd., Phillipsburg, NJ, with all 18
 https://www.harkershollow.com/wp-content/uploads/sites/7948/2020/06/Harkers-Hollow-NJ-9.27.pdf
 
 All four tees are par 70: Blue 6,451 yards; White 6,214; Gold 5,660; Green 5,237. The app uses the club's labels, including Green for the shortest tee. Course rating and slope are not used for this app's gross score tracking.
+
+## Farmstead (v2.11)
+
+Added 12 presets covering Clubview/Valleyview (par 70), Lakeview/Clubview (par 71), and Valleyview/Lakeview (par 69), preserving front/back order. Each includes Blue, White, Red, and the published forward tee label: Gold for Clubview/Valleyview and Lakeview/Clubview, Yellow for Valleyview/Lakeview.
+
+Hole data comes from the route-specific published Golfify scorecards linked by each preset. The official Farmstead course page confirms the three nines: https://www.farmsteadgolf.com/golf. Its illustrated hole guides and general course lengths differ from some published scorecard entries, so the setup screen asks golfers to confirm the actual layout and current card. No claim is made that these are freshly verified tournament distances.
+
+The route-specific White yardage for Lakeview #2 is 380 on Lakeview/Clubview and 400 on Valleyview/Lakeview. These differences are retained rather than silently mixing the cards. Each preset's par and yardage totals are derived from its 18 hole entries.

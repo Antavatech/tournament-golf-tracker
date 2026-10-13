@@ -39,11 +39,26 @@ function harness(storage=new Map()){
   assert.equal(h.run('validateRoundFile(roundBackup()).tee'),tee[0].toUpperCase()+tee.slice(1));
   assert(h.run('state.courseSource').endsWith('Harkers-Hollow-NJ-9.27.pdf'));
  }
+ for(const [route,par,tees,totals] of [
+  ['club-valley',70,['blue','white','gold','red'],[6346,5836,5042,4862]],
+  ['lake-club',71,['blue','white','gold','red'],[6805,6060,5102,4877]],
+  ['valley-lake',69,['blue','white','yellow','red'],[6161,5544,4764,4539]]]){
+  for(let i=0;i<tees.length;i++){
+   const key='farmstead-'+route+'-'+tees[i];h.node('#coursePreset').value=key;h.node('#coursePreset').change();h.start();
+   assert.equal(h.run('state.pars.reduce((a,b)=>a+b,0)'),par);
+   assert.equal(h.run('state.yardages.reduce((a,b)=>a+b,0)'),totals[i]);
+   assert.equal(h.run('state.pars.length'),18);assert.equal(h.run('state.yardages.length'),18);
+   assert.equal(h.run('validateRoundFile(roundBackup()).tee'),tees[i][0].toUpperCase()+tees[i].slice(1));
+  }
+ }
+ h.node('#coursePreset').value='farmstead-valley-lake-blue';h.start();
+ assert.equal(h.run('state.yardages[0]'),404);assert.equal(h.run('state.yardages[9]'),357);
+ assert.equal(h.run('state.pars[6]'),5); // Valleyview #7 must remain a par 5.
  h.node('#coursePreset').value='hopewell-blue';h.start();assert.equal(h.run('state.yardages[0]'),374);
  assert.equal(h.run('state.pars.reduce((a,b)=>a+b,0)'),72);
  h.node('#coursePreset').value='custom';h.node('#coursePreset').change();h.start();
  assert.equal(h.run('state.tee'),undefined);assert.equal(h.run('state.yardages'),undefined);
- console.log('PASS: Harkers Hollow and Meadows four tee totals, preset selection, copied arrays, source dates, backup restore, Hopewell and custom reset.');
+ console.log('PASS: Farmstead 12 layout/tee combinations; Harkers Hollow and Meadows four tee totals, preset selection, copied arrays, source dates, backup restore, Hopewell and custom reset.');
 }
 (async()=>{
  const h=harness(),files=new Map(),writes=[];let nextError=0,held=false,release;

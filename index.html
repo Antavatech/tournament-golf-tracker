@@ -79,7 +79,7 @@
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker <span class="version">v2.10</span></h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2.11</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
@@ -88,7 +88,7 @@
       <div class="big">Start a round</div>
       <p class="muted">Enter the course and up to three golfers. Your round is saved automatically on this device.</p>
       <label for="coursePreset">Course preset</label>
-      <select id="coursePreset"><option value="hopewell-blue">Hopewell Valley Golf Club — Blue tees</option><option value="meadows-blue">The Meadows at Middlesex — Blue tees</option><option value="meadows-white">The Meadows at Middlesex — White tees</option><option value="meadows-gold">The Meadows at Middlesex — Gold tees</option><option value="meadows-red">The Meadows at Middlesex — Red tees</option><option value="harkers-blue">Harkers Hollow Golf Club — Blue tees</option><option value="harkers-white">Harkers Hollow Golf Club — White tees</option><option value="harkers-gold">Harkers Hollow Golf Club — Gold tees</option><option value="harkers-green">Harkers Hollow Golf Club — Green tees</option><option value="custom">Custom course</option></select>
+      <select id="coursePreset"><option value="hopewell-blue">Hopewell Valley Golf Club — Blue tees</option><option value="meadows-blue">The Meadows at Middlesex — Blue tees</option><option value="meadows-white">The Meadows at Middlesex — White tees</option><option value="meadows-gold">The Meadows at Middlesex — Gold tees</option><option value="meadows-red">The Meadows at Middlesex — Red tees</option><option value="harkers-blue">Harkers Hollow Golf Club — Blue tees</option><option value="harkers-white">Harkers Hollow Golf Club — White tees</option><option value="harkers-gold">Harkers Hollow Golf Club — Gold tees</option><option value="harkers-green">Harkers Hollow Golf Club — Green tees</option><optgroup label="Farmstead — Clubview / Valleyview"><option value="farmstead-club-valley-blue">Farmstead — Clubview / Valleyview — Blue tees</option><option value="farmstead-club-valley-white">Farmstead — Clubview / Valleyview — White tees</option><option value="farmstead-club-valley-gold">Farmstead — Clubview / Valleyview — Gold tees</option><option value="farmstead-club-valley-red">Farmstead — Clubview / Valleyview — Red tees</option></optgroup><optgroup label="Farmstead — Lakeview / Clubview"><option value="farmstead-lake-club-blue">Farmstead — Lakeview / Clubview — Blue tees</option><option value="farmstead-lake-club-white">Farmstead — Lakeview / Clubview — White tees</option><option value="farmstead-lake-club-gold">Farmstead — Lakeview / Clubview — Gold tees</option><option value="farmstead-lake-club-red">Farmstead — Lakeview / Clubview — Red tees</option></optgroup><optgroup label="Farmstead — Valleyview / Lakeview"><option value="farmstead-valley-lake-blue">Farmstead — Valleyview / Lakeview — Blue tees</option><option value="farmstead-valley-lake-white">Farmstead — Valleyview / Lakeview — White tees</option><option value="farmstead-valley-lake-yellow">Farmstead — Valleyview / Lakeview — Yellow tees</option><option value="farmstead-valley-lake-red">Farmstead — Valleyview / Lakeview — Red tees</option></optgroup><option value="custom">Custom course</option></select>
       <p class="muted" id="presetInfo">Blue tees · Par 72 · 6,612 yards. Pars and yardages load automatically.</p>
       <a id="presetSource" class="muted" href="https://golfmercercounty.com/wp-content/uploads/2025/03/196189_proofV1.pdf" target="_blank" rel="noopener noreferrer">View source scorecard</a>
       <label for="courseInput">Course</label><input id="courseInput" placeholder="Course name" value="Hopewell Valley Golf Club" readonly>
@@ -192,6 +192,34 @@ const COURSE_PRESETS={
   'meadows-gold':{...MEADOWS,tee:'Gold',yardages:[495,117,320,315,380,112,463,125,290,137,280,360,275,365,156,370,115,434]},
   'meadows-red':{...MEADOWS,tee:'Red',yardages:[451,113,270,310,304,105,442,115,285,131,272,353,274,289,148,360,111,429]}
 };
+const FARMSTEAD_NINES={
+  club:{pars:[4,4,3,5,5,4,4,4,3],
+    blue:[368,410,195,586,530,396,393,437,180],white:[356,384,188,497,485,329,343,432,172],
+    forward:[339,292,164,442,405,235,280,418,115],red:[329,282,154,432,395,225,270,408,105]},
+  lake:{pars:[4,4,3,5,5,3,4,4,3],
+    blue:[357,433,219,550,561,238,384,367,201],white:[285,380,182,508,503,219,369,304,124],
+    forward:[236,310,136,392,454,176,316,289,103],red:[226,300,126,382,444,166,306,234,93]},
+  valley:{pars:[4,3,3,5,3,4,5,3,4],
+    blue:[404,223,142,580,126,302,430,189,455],white:[383,182,132,520,120,298,410,172,433],
+    forward:[318,162,125,520,97,270,400,172,288],red:[308,152,115,510,87,260,390,162,278]}
+};
+const FARMSTEAD_ROUTES=[
+  {id:'club-valley',label:'Clubview / Valleyview',nines:['club','valley'],forwardTee:'Gold',source:'https://www.golfify.io/courses/farmstead-golf-country-club-clubview-valleyview'},
+  {id:'lake-club',label:'Lakeview / Clubview',nines:['lake','club'],forwardTee:'Gold',source:'https://www.golfify.io/courses/farmstead-golf-country-club-lakeview-clubview'},
+  {id:'valley-lake',label:'Valleyview / Lakeview',nines:['valley','lake'],forwardTee:'Yellow',source:'https://www.golfify.io/courses/farmstead-golf-country-club-valleyview-lakeview'}
+];
+for(const route of FARMSTEAD_ROUTES){
+  const [front,back]=route.nines.map(id=>FARMSTEAD_NINES[id]);
+  for(const [column,tee] of [['blue','Blue'],['white','White'],['forward',route.forwardTee],['red','Red']]){
+    const yardages=[...front[column],...back[column]];
+    // This published route lists Lakeview #2's White tee at 400, not 380.
+    if(route.id==='valley-lake'&&column==='white')yardages[10]=400;
+    COURSE_PRESETS['farmstead-'+route.id+'-'+tee.toLowerCase()]={
+      name:'Farmstead Golf & Country Club · '+route.label,tee,pars:[...front.pars,...back.pars],yardages,source:route.source,
+      note:'Published scorecard data. Confirm layout and yardages against your current course or tournament card.'
+    };
+  }
+}
 const SHOT_TYPES=['Fairway','Rough','Green','Bunker','Putt','Other'];
 function localDate(date=new Date()){
   return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
