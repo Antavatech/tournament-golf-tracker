@@ -79,7 +79,7 @@
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker <span class="version">v2.8</span></h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2.9</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
@@ -88,8 +88,9 @@
       <div class="big">Start a round</div>
       <p class="muted">Enter the course and up to three golfers. Your round is saved automatically on this device.</p>
       <label for="coursePreset">Course preset</label>
-      <select id="coursePreset"><option value="hopewell-blue">Hopewell Valley Golf Club — Blue tees</option><option value="custom">Custom course</option></select>
+      <select id="coursePreset"><option value="hopewell-blue">Hopewell Valley Golf Club — Blue tees</option><option value="meadows-blue">The Meadows at Middlesex — Blue tees</option><option value="meadows-white">The Meadows at Middlesex — White tees</option><option value="meadows-gold">The Meadows at Middlesex — Gold tees</option><option value="meadows-red">The Meadows at Middlesex — Red tees</option><option value="custom">Custom course</option></select>
       <p class="muted" id="presetInfo">Blue tees · Par 72 · 6,612 yards. Pars and yardages load automatically.</p>
+      <a id="presetSource" class="muted" href="https://golfmercercounty.com/wp-content/uploads/2025/03/196189_proofV1.pdf" target="_blank" rel="noopener noreferrer">View source scorecard</a>
       <label for="courseInput">Course</label><input id="courseInput" placeholder="Course name" value="Hopewell Valley Golf Club" readonly>
       <label for="p1">Player 1</label><input id="p1" value="Player 1">
       <label for="p2">Player 2</label><input id="p2" value="Player 2">
@@ -172,6 +173,17 @@ const HOPEWELL_BLUE={name:'Hopewell Valley Golf Club',tee:'Blue',
   pars:[4,4,3,5,4,4,5,4,3,4,4,4,3,4,4,5,3,5],
   yardages:[374,381,166,476,432,396,495,400,132,389,404,356,175,352,414,491,209,570],
   source:'https://golfmercercounty.com/wp-content/uploads/2025/03/196189_proofV1.pdf'};
+const MEADOWS={name:'The Meadows at Middlesex Golf Course',
+  pars:[5,3,4,4,4,3,5,3,4,3,4,5,4,4,3,4,3,5],
+  source:'https://homepage.villanova.edu/joseph.bausch/images/albums/MeadowsatMiddlesex/pages/page_2.html',
+  note:'Published scorecard dated September 2020. Confirm yardages against the current course card.'};
+const COURSE_PRESETS={
+  'hopewell-blue':HOPEWELL_BLUE,
+  'meadows-blue':{...MEADOWS,tee:'Blue',yardages:[520,150,345,390,414,160,517,160,354,197,415,485,450,400,218,443,139,520]},
+  'meadows-white':{...MEADOWS,tee:'White',yardages:[510,140,335,380,404,150,510,150,344,187,332,475,440,390,208,433,129,510]},
+  'meadows-gold':{...MEADOWS,tee:'Gold',yardages:[495,117,320,315,380,112,463,125,290,137,280,360,275,365,156,370,115,434]},
+  'meadows-red':{...MEADOWS,tee:'Red',yardages:[451,113,270,310,304,105,442,115,285,131,272,353,274,289,148,360,111,429]}
+};
 const SHOT_TYPES=['Fairway','Rough','Green','Bunker','Putt','Other'];
 function localDate(date=new Date()){
   return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
@@ -300,10 +312,12 @@ function renderSummary(){
 }
 
 $('#coursePreset').addEventListener('change',()=>{
-  const preset=$('#coursePreset').value==='hopewell-blue';
-  $('#courseInput').readOnly=preset;
-  $('#courseInput').value=preset?HOPEWELL_BLUE.name:'';
-  $('#presetInfo').textContent=preset?'Blue tees · Par 72 · 6,612 yards. Pars and yardages load automatically.':'Enter your course name and set each hole’s par while tracking.';
+  const preset=COURSE_PRESETS[$('#coursePreset').value];
+  $('#courseInput').readOnly=!!preset;
+  $('#courseInput').value=preset?preset.name:'';
+  $('#presetInfo').textContent=preset?`${preset.tee} tees · Par ${preset.pars.reduce((a,b)=>a+b,0)} · ${preset.yardages.reduce((a,b)=>a+b,0).toLocaleString()} yards. Pars and yardages load automatically.`+(preset.note?' '+preset.note:''):'Enter your course name and set each hole’s par while tracking.';
+  $('#presetSource').classList.toggle('hidden',!preset);
+  if(preset)$('#presetSource').href=preset.source;
 });
 $('#startBtn').addEventListener('click',()=>{
   if(hasRound()&&!confirm('Start a new round and replace the round on this device? Use Save Round first to keep a file.'))return;
@@ -311,9 +325,9 @@ $('#startBtn').addEventListener('click',()=>{
   state.startedAt=new Date().toISOString();state.roundDate=localDate();
   state.course=$('#courseInput').value.trim()||'Tournament Round';
   state.hole=Number($('#startHole').value);state.active=0;
-  const preset=$('#coursePreset').value==='hopewell-blue';
-  state.pars=preset?[...HOPEWELL_BLUE.pars]:Array(18).fill(4);
-  if(preset){state.course=HOPEWELL_BLUE.name;state.tee=HOPEWELL_BLUE.tee;state.yardages=[...HOPEWELL_BLUE.yardages];state.courseSource=HOPEWELL_BLUE.source}
+  const preset=COURSE_PRESETS[$('#coursePreset').value];
+  state.pars=preset?[...preset.pars]:Array(18).fill(4);
+  if(preset){state.course=preset.name;state.tee=preset.tee;state.yardages=[...preset.yardages];state.courseSource=preset.source}
   else{delete state.tee;delete state.yardages;delete state.courseSource}
   state.players=[$('#p1').value.trim()||'Player 1',$('#p2').value.trim()||'Player 2',$('#p3').value.trim()||'Player 3'].map(blankPlayer);
   render();show('playView');

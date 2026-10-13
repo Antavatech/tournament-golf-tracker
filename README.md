@@ -29,3 +29,12 @@ Every change immediately saves the current round and pending GitHub backups to b
 The durable queue preserves unsynced rounds when starting another round or reopening the app. Network failures retry with increasing delays; coming online retries immediately. GitHub authorization failures pause automatic requests and display an actionable status. Connect again after reopening or reloading the app because the token is kept only in memory. Mobile browsers may suspend background activity; GitHub uploading is best effort when the app becomes hidden and resumes on return. The local queue is the recovery path, not a promise of continuous background uploads.
 
 Tests: `node tests/autosave.cjs` verifies local persistence, automatic batching, offline recovery across restarts, per-round files, edits during upload, retries, invalid credentials, and credential isolation using simulated GitHub responses.
+
+## Course presets (v2.9)
+
+The Meadows at Middlesex Golf Course in Plainsboro has Blue (6,277 yards), White (6,027), Gold (5,109), and Red (4,762) presets, all par 70. Each includes all 18 hole pars and yardages. Data was transcribed from the photographed printed scorecard dated 9/20 in the Bausch Collection:
+https://homepage.villanova.edu/joseph.bausch/images/albums/MeadowsatMiddlesex/pages/page_2.html
+
+Cross-check: https://www.golfify.io/courses/the-meadows-at-middlesex-golf-course
+
+The current official course overview gives a general length of 6,290 yards, and some other online listings have different White and Red totals. The app identifies the scorecard date and links the source rather than mixing conflicting entries. Confirm against the current course or tournament scorecard. Hopewell Valley Blue and custom course setup remain available. Starting a preset copies its arrays so changing a round's par never alters the original preset.

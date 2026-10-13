@@ -15,6 +15,26 @@ function harness(storage=new Map()){
  const shot=()=>events.click({target:{closest:s=>s==='[data-shot]'?{dataset:{pi:'0',shot:'Fairway'}}:null}});
  return {context,node,events,timers,storage,run,advance,flush,start,shot};
 }
+{
+ const h=harness();
+ for(const [tee,yards] of [['blue',6277],['white',6027],['gold',5109],['red',4762]]){
+  h.node('#coursePreset').value='meadows-'+tee;h.node('#coursePreset').change();
+  assert.equal(h.node('#courseInput').readOnly,true);
+  assert(h.node('#presetInfo').textContent.includes('2020'));
+  h.start();assert.equal(h.run('state.course'),'The Meadows at Middlesex Golf Course');
+  assert.equal(h.run('state.pars.reduce((a,b)=>a+b,0)'),70);
+  assert.equal(h.run('state.yardages.reduce((a,b)=>a+b,0)'),yards);
+  assert.equal(h.run('state.pars.length'),18);assert.equal(h.run('state.yardages.length'),18);
+  assert.equal(h.run('state.pars[0]'),5);
+  assert.equal(h.run('validateRoundFile(roundBackup()).tee'),tee[0].toUpperCase()+tee.slice(1));
+  h.run('state.pars[0]=4');assert.equal(h.run("COURSE_PRESETS['meadows-"+tee+"'].pars[0]"),5);
+ }
+ h.node('#coursePreset').value='hopewell-blue';h.start();assert.equal(h.run('state.yardages[0]'),374);
+ assert.equal(h.run('state.pars.reduce((a,b)=>a+b,0)'),72);
+ h.node('#coursePreset').value='custom';h.node('#coursePreset').change();h.start();
+ assert.equal(h.run('state.tee'),undefined);assert.equal(h.run('state.yardages'),undefined);
+ console.log('PASS: Meadows four tee totals, preset selection, copied arrays, source dates, backup restore, Hopewell and custom reset.');
+}
 (async()=>{
  const h=harness(),files=new Map(),writes=[];let nextError=0,held=false,release;
  h.context.fetch=async(url,options)=>{
