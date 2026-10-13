@@ -29,11 +29,21 @@ function harness(storage=new Map()){
   assert.equal(h.run('validateRoundFile(roundBackup()).tee'),tee[0].toUpperCase()+tee.slice(1));
   h.run('state.pars[0]=4');assert.equal(h.run("COURSE_PRESETS['meadows-"+tee+"'].pars[0]"),5);
  }
+ for(const [tee,yards,firstHole] of [['blue',6451,414],['white',6214,364],['gold',5660,305],['green',5237,305]]){
+  h.node('#coursePreset').value='harkers-'+tee;h.node('#coursePreset').change();h.start();
+  assert.equal(h.run('state.course'),'Harkers Hollow Golf Club');
+  assert.equal(h.run('state.pars.reduce((a,b)=>a+b,0)'),70);
+  assert.equal(h.run('state.yardages.reduce((a,b)=>a+b,0)'),yards);
+  assert.equal(h.run('state.yardages[0]'),firstHole);
+  assert.equal(h.run('state.pars.length'),18);assert.equal(h.run('state.yardages.length'),18);
+  assert.equal(h.run('validateRoundFile(roundBackup()).tee'),tee[0].toUpperCase()+tee.slice(1));
+  assert(h.run('state.courseSource').endsWith('Harkers-Hollow-NJ-9.27.pdf'));
+ }
  h.node('#coursePreset').value='hopewell-blue';h.start();assert.equal(h.run('state.yardages[0]'),374);
  assert.equal(h.run('state.pars.reduce((a,b)=>a+b,0)'),72);
  h.node('#coursePreset').value='custom';h.node('#coursePreset').change();h.start();
  assert.equal(h.run('state.tee'),undefined);assert.equal(h.run('state.yardages'),undefined);
- console.log('PASS: Meadows four tee totals, preset selection, copied arrays, source dates, backup restore, Hopewell and custom reset.');
+ console.log('PASS: Harkers Hollow and Meadows four tee totals, preset selection, copied arrays, source dates, backup restore, Hopewell and custom reset.');
 }
 (async()=>{
  const h=harness(),files=new Map(),writes=[];let nextError=0,held=false,release;

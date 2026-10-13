@@ -38,3 +38,10 @@ https://homepage.villanova.edu/joseph.bausch/images/albums/MeadowsatMiddlesex/pa
 Cross-check: https://www.golfify.io/courses/the-meadows-at-middlesex-golf-course
 
 The current official course overview gives a general length of 6,290 yards, and some other online listings have different White and Red totals. The app identifies the scorecard date and links the source rather than mixing conflicting entries. Confirm against the current course or tournament scorecard. Hopewell Valley Blue and custom course setup remain available. Starting a preset copies its arrays so changing a round's par never alters the original preset.
+
+## Harkers Hollow (v2.10)
+
+Added Harkers Hollow Golf Club, 950 Uniontown Rd., Phillipsburg, NJ, with all 18 hole pars and yardages from its club-published scorecard PDF:
+https://www.harkershollow.com/wp-content/uploads/sites/7948/2020/06/Harkers-Hollow-NJ-9.27.pdf
+
+All four tees are par 70: Blue 6,451 yards; White 6,214; Gold 5,660; Green 5,237. The app uses the club's labels, including Green for the shortest tee. Course rating and slope are not used for this app's gross score tracking.

@@ -79,7 +79,7 @@
 <body>
 <div class="app">
   <header>
-    <div><h1>Tournament Golf Tracker <span class="version">v2.9</span></h1><div class="sub" id="courseLabel">New round</div></div>
+    <div><h1>Tournament Golf Tracker <span class="version">v2.10</span></h1><div class="sub" id="courseLabel">New round</div></div>
     <button id="newRoundBtn">New</button>
   </header>
 
@@ -88,7 +88,7 @@
       <div class="big">Start a round</div>
       <p class="muted">Enter the course and up to three golfers. Your round is saved automatically on this device.</p>
       <label for="coursePreset">Course preset</label>
-      <select id="coursePreset"><option value="hopewell-blue">Hopewell Valley Golf Club — Blue tees</option><option value="meadows-blue">The Meadows at Middlesex — Blue tees</option><option value="meadows-white">The Meadows at Middlesex — White tees</option><option value="meadows-gold">The Meadows at Middlesex — Gold tees</option><option value="meadows-red">The Meadows at Middlesex — Red tees</option><option value="custom">Custom course</option></select>
+      <select id="coursePreset"><option value="hopewell-blue">Hopewell Valley Golf Club — Blue tees</option><option value="meadows-blue">The Meadows at Middlesex — Blue tees</option><option value="meadows-white">The Meadows at Middlesex — White tees</option><option value="meadows-gold">The Meadows at Middlesex — Gold tees</option><option value="meadows-red">The Meadows at Middlesex — Red tees</option><option value="harkers-blue">Harkers Hollow Golf Club — Blue tees</option><option value="harkers-white">Harkers Hollow Golf Club — White tees</option><option value="harkers-gold">Harkers Hollow Golf Club — Gold tees</option><option value="harkers-green">Harkers Hollow Golf Club — Green tees</option><option value="custom">Custom course</option></select>
       <p class="muted" id="presetInfo">Blue tees · Par 72 · 6,612 yards. Pars and yardages load automatically.</p>
       <a id="presetSource" class="muted" href="https://golfmercercounty.com/wp-content/uploads/2025/03/196189_proofV1.pdf" target="_blank" rel="noopener noreferrer">View source scorecard</a>
       <label for="courseInput">Course</label><input id="courseInput" placeholder="Course name" value="Hopewell Valley Golf Club" readonly>
@@ -177,8 +177,16 @@ const MEADOWS={name:'The Meadows at Middlesex Golf Course',
   pars:[5,3,4,4,4,3,5,3,4,3,4,5,4,4,3,4,3,5],
   source:'https://homepage.villanova.edu/joseph.bausch/images/albums/MeadowsatMiddlesex/pages/page_2.html',
   note:'Published scorecard dated September 2020. Confirm yardages against the current course card.'};
+const HARKERS={name:'Harkers Hollow Golf Club',
+  pars:[4,4,4,5,3,4,4,4,3,5,3,4,4,4,4,3,4,4],
+  source:'https://www.harkershollow.com/wp-content/uploads/sites/7948/2020/06/Harkers-Hollow-NJ-9.27.pdf'};
 const COURSE_PRESETS={
   'hopewell-blue':HOPEWELL_BLUE,
+  'harkers-blue':{...HARKERS,tee:'Blue',yardages:[414,369,370,519,160,416,419,420,152,492,184,384,384,378,367,202,401,420]},
+  'harkers-white':{...HARKERS,tee:'White',yardages:[364,359,361,506,142,405,406,411,142,485,176,372,370,368,358,194,390,405]},
+  'harkers-gold':{...HARKERS,tee:'Gold',yardages:[305,359,361,442,142,315,359,355,142,485,146,319,309,368,358,153,390,352]},
+  'harkers-green':{...HARKERS,tee:'Green',yardages:[305,303,324,442,102,315,359,355,101,443,146,319,309,292,276,153,341,352]},
+
   'meadows-blue':{...MEADOWS,tee:'Blue',yardages:[520,150,345,390,414,160,517,160,354,197,415,485,450,400,218,443,139,520]},
   'meadows-white':{...MEADOWS,tee:'White',yardages:[510,140,335,380,404,150,510,150,344,187,332,475,440,390,208,433,129,510]},
   'meadows-gold':{...MEADOWS,tee:'Gold',yardages:[495,117,320,315,380,112,463,125,290,137,280,360,275,365,156,370,115,434]},
