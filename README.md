@@ -53,3 +53,14 @@ Added 12 presets covering Clubview/Valleyview (par 70), Lakeview/Clubview (par 7
 Hole data comes from the route-specific published Golfify scorecards linked by each preset. The official Farmstead course page confirms the three nines: https://www.farmsteadgolf.com/golf. Its illustrated hole guides and general course lengths differ from some published scorecard entries, so the setup screen asks golfers to confirm the actual layout and current card. No claim is made that these are freshly verified tournament distances.
 
 The route-specific White yardage for Lakeview #2 is 380 on Lakeview/Clubview and 400 on Valleyview/Lakeview. These differences are retained rather than silently mixing the cards. Each preset's par and yardage totals are derived from its 18 hole entries.
+
+## Tamarack (v2.12)
+
+Added Tamarack East (par 71) and West (par 72), with Blue, White, and Red tee presets and all 18 holes. Standard published scorecards are linked by each preset. East totals: Blue 6,226, White 5,809, Red 5,343 yards. West totals: Blue 7,025, White 6,340, Red 5,810 yards.
+
+Blue/White arrays were cross-checked against Offcourse, the club overview, and the matching GolfTraxx East / FreeGolfTracker West hole tables. East Red comes from GolfTraxx; West Red comes from FreeGolfTracker and agrees with Golfify's Red column. A conflicting Golfify West White column was excluded because it assigns different hole pars and yardages from the other West cards. The GolfTraxx East metadata's par-72 label is inconsistent with its own 18 hole rows; the app uses their sum, par 71, consistent with the club overview.
+
+The official U.S. Kids Golf Tour Championship page lists November 8, 2026, and says tee times are posted two days prior. It does not yet specify East/West or exact division yardages:
+https://tournaments.uskidsgolf.com/tournaments/local/find-tournament/519522/tamarack-golf-course-tour-championship
+
+These are standard course presets, not a claimed verified championship setup. Setup notes remind golfers to confirm the assigned course and age-group tees. Junior tournament distances may differ from standard tee colors.

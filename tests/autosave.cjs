@@ -54,11 +54,22 @@ function harness(storage=new Map()){
  h.node('#coursePreset').value='farmstead-valley-lake-blue';h.start();
  assert.equal(h.run('state.yardages[0]'),404);assert.equal(h.run('state.yardages[9]'),357);
  assert.equal(h.run('state.pars[6]'),5); // Valleyview #7 must remain a par 5.
+ for(const [course,par,totals] of [['east',71,[6226,5809,5343]],['west',72,[7025,6340,5810]]]){
+  for(const [i,tee] of ['blue','white','red'].entries()){
+   const key='tamarack-'+course+'-'+tee;h.node('#coursePreset').value=key;h.node('#coursePreset').change();h.start();
+   assert.equal(h.run('state.pars.reduce((a,b)=>a+b,0)'),par);
+   assert.equal(h.run('state.yardages.reduce((a,b)=>a+b,0)'),totals[i]);
+   assert.equal(h.run('state.pars.length'),18);assert.equal(h.run('state.yardages.length'),18);
+   assert.equal(h.run('validateRoundFile(roundBackup()).tee'),tee[0].toUpperCase()+tee.slice(1));
+   assert(h.node('#presetInfo').textContent.includes('age-group tees'));
+  }
+ }
+ h.node('#coursePreset').value='tamarack-west-white';h.start();assert.equal(h.run('state.pars[1]'),4);assert.equal(h.run('state.yardages[1]'),362);
  h.node('#coursePreset').value='hopewell-blue';h.start();assert.equal(h.run('state.yardages[0]'),374);
  assert.equal(h.run('state.pars.reduce((a,b)=>a+b,0)'),72);
  h.node('#coursePreset').value='custom';h.node('#coursePreset').change();h.start();
  assert.equal(h.run('state.tee'),undefined);assert.equal(h.run('state.yardages'),undefined);
- console.log('PASS: Farmstead 12 layout/tee combinations; Harkers Hollow and Meadows four tee totals, preset selection, copied arrays, source dates, backup restore, Hopewell and custom reset.');
+ console.log('PASS: Tamarack six course/tee options; Farmstead 12 layout/tee combinations; Harkers Hollow and Meadows four tee totals, preset selection, copied arrays, source dates, backup restore, Hopewell and custom reset.');
 }
 (async()=>{
  const h=harness(),files=new Map(),writes=[];let nextError=0,held=false,release;
