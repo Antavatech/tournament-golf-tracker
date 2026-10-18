@@ -1,4 +1,4 @@
-# Tournament Golf Tracker — v2.1
+# Tournament Golf Tracker — v3.0
 
 Track all three players on the same screen. Each player has independent shot, penalty, undo, and score controls.
 
@@ -64,3 +64,7 @@ The official U.S. Kids Golf Tour Championship page lists November 8, 2026, and s
 https://tournaments.uskidsgolf.com/tournaments/local/find-tournament/519522/tamarack-golf-course-tour-championship
 
 These are standard course presets, not a claimed verified championship setup. Setup notes remind golfers to confirm the assigned course and age-group tees. Junior tournament distances may differ from standard tee colors.
+
+## v3.0 baseline
+
+Version 2.12 is preserved on the `v2.12` branch at commit `3a2db47ecdde2256487e468d3efa4cec054636a8`. Version 3 starts from the same features and layout, with a refreshed application version and offline cache. The device storage keys, round backup format, GitHub data branch, and course presets are unchanged.
