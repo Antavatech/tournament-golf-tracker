@@ -4,16 +4,17 @@ function harness(storage=new Map()){
  const nodes={},events={},timers=new Map();let now=0,nextTimer=0;
  const node=s=>nodes[s]||(nodes[s]={value:'',dataset:{},textContent:'',classList:{toggle(){}},addEventListener(t,f){this[t]=f},appendChild(){},focus(){},click(){},remove(){}});
  const context={crypto:require('node:crypto').webcrypto,TextEncoder,AbortController,btoa,Blob,URL,console,
-  document:{visibilityState:'visible',querySelector:node,querySelectorAll:()=>[],createElement:()=>node('created'),body:{appendChild(){}},addEventListener(t,f){events[t]=f}},
+  document:{visibilityState:'visible',querySelector:node,querySelectorAll:()=>[],createElement:()=>node('created'),body:{dataset:{},appendChild(){}},addEventListener(t,f){events[t]=f}},
   window:{addEventListener(t,f){events[t]=f}},navigator:{onLine:true},location:{reload(){}},confirm:()=>true,
   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
   setTimeout:(f,ms)=>{const id=++nextTimer;timers.set(id,{f,due:now+ms});return id},clearTimeout:id=>timers.delete(id)};
  vm.createContext(context);vm.runInContext(source,context);
  const run=s=>vm.runInContext(s,context),flush=async()=>{for(let i=0;i<40;i++)await Promise.resolve()};
  const advance=async ms=>{now+=ms;let count=0;while(true){const due=[...timers].find(([,t])=>t.due<=now);if(!due)break;timers.delete(due[0]);due[1].f();await flush();if(++count>50)throw Error('timer loop')}};
- const start=()=>{node('#p1').value='Player 1';node('#p2').value='Player 2';node('#p3').value='Player 3';node('#courseInput').value='Test 🏌 course';node('#startHole').value='0';node('#startBtn').click()};
- const shot=()=>events.click({target:{closest:s=>s==='[data-shot]'?{dataset:{pi:'0',shot:'Fairway'}}:null}});
- return {context,node,events,timers,storage,run,advance,flush,start,shot};
+ const start=()=>{node('#p1').value='Player 1';node('#p2').value='Player 2';node('#p3').value='Player 3';node('#p4').value='Player 4';node('#courseInput').value='Test 🏌 course';node('#startHole').value='0';node('#startBtn').click()};
+ const stroke=(pi,remove=false)=>events.click({target:{closest:s=>s===(remove?'[data-remove]':'[data-add]')?{dataset:remove?{remove:String(pi)}:{add:String(pi)}}:null}});
+ const shot=()=>stroke(0);
+ return {context,node,events,timers,storage,run,advance,flush,start,shot,stroke};
 }
 {
  const h=harness();
@@ -70,6 +71,34 @@ function harness(storage=new Map()){
  h.node('#coursePreset').value='custom';h.node('#coursePreset').change();h.start();
  assert.equal(h.run('state.tee'),undefined);assert.equal(h.run('state.yardages'),undefined);
  console.log('PASS: Tamarack six course/tee options; Farmstead 12 layout/tee combinations; Harkers Hollow and Meadows four tee totals, preset selection, copied arrays, source dates, backup restore, Hopewell and custom reset.');
+}
+{
+ const h=harness();
+ for(let count=1;count<=4;count++){
+  h.node('#playerCount').value=String(count);h.node('#playerCount').change();h.start();
+  assert.equal(h.run('state.players.length'),count);
+  assert.equal(h.node('#p4').disabled,count<4);
+  assert.equal((h.node('#playerCards').innerHTML.match(/<article/g)||[]).length,count);
+ }
+ h.stroke(3);h.stroke(3);h.stroke(0);
+ assert.equal(h.run('hs(3)'),2);assert.equal(h.run('hs(0)'),1);assert.equal(h.run('hs(1)'),0);
+ h.stroke(3,true);h.stroke(3,true);h.stroke(3,true);assert.equal(h.run('hs(3)'),0);
+ h.run("state.players[3].holes[0]={shots:['Fairway','Putt'],penalties:1,actions:['shot','penalty','shot']};render()");
+ h.stroke(3,true);assert.equal(h.run('hs(3)'),2);assert.equal(h.run('hd(3).penalties'),1);
+ h.stroke(3,true);assert.equal(h.run('hd(3).penalties'),0);assert.equal(h.run('hs(3)'),1);
+ h.stroke(3);assert.equal(h.run('validateRoundFile(roundBackup()).players.length'),4);
+ assert.equal(h.run("validateRoundFile(roundBackup()).players[3].holes[0].shots[1]"),'Stroke');
+ assert(h.run('csvText()').includes('Player 4'));
+ h.run('renderScorecard()');
+ const scorecard=h.node('#scoreTable').innerHTML;
+ assert.equal((scorecard.match(/<table /g)||[]).length,2);
+ for(let hole=1;hole<=18;hole++)assert(scorecard.includes('>'+hole+'</th>'));
+ assert.equal((scorecard.match(/title="Player 4"/g)||[]).length,2);
+ assert(h.node('#scoreTotals').innerHTML.includes('<strong>2</strong>'));
+ h.run("state.hole=17;renderSummary()");assert.equal(h.run('toPar(3)'),'-2');
+ const restored=harness(h.storage);assert.equal(restored.run('state.players.length'),4);assert.equal(restored.run('total(3)'),2);
+ assert.equal(restored.run('pendingCount()'),4,'four-player pending rounds survive reload');
+ console.log('PASS: 1–4 player setup; independent fourth-player scores; remove floor; legacy shot/penalty undo; four-player backup, CSV and reload; 18-hole grids and totals.');
 }
 (async()=>{
  const h=harness(),files=new Map(),writes=[];let nextError=0,held=false,release;

@@ -1,11 +1,11 @@
-# Tournament Golf Tracker — v3.0
+# Tournament Golf Tracker — v3.1
 
-Track all three players on the same screen. Each player has independent shot, penalty, undo, and score controls.
+Choose one to four players at startup. All players stay visible with independent Add stroke and Remove controls. The scorecard shows all 18 holes in two nine-hole grids that fit the viewport.
 
 - **Save Round** downloads a JSON backup containing all players, shots, penalties, pars, and current hole. Keep it in Downloads or save it to Files on iPhone/iPad.
 - **Load Round** restores a saved JSON backup, including on another device.
 - **Export CSV** downloads a spreadsheet-friendly record of all holes and shots.
-- Rounds also save automatically in this browser; there is no cloud synchronization.
+- Rounds save automatically in this browser. Connect GitHub under **Save & backup** for automatic uploads.
 
 Open in Safari and choose Share → Add to Home Screen to install on iPhone/iPad. Load online before using offline. Close and reopen the app after an update if the old interface remains.
 
@@ -68,3 +68,7 @@ These are standard course presets, not a claimed verified championship setup. Se
 ## v3.0 baseline
 
 Version 2.12 is preserved on the `v2.12` branch at commit `3a2db47ecdde2256487e468d3efa4cec054636a8`. Version 3 starts from the same features and layout, with a refreshed application version and offline cache. The device storage keys, round backup format, GitHub data branch, and course presets are unchanged.
+
+## Simple scoring (v3.1)
+
+Choose 1–4 players before starting. Add stroke increases the current hole score; Remove reverses the last stroke (including penalties in older imported rounds) and stops at zero. Four players use a two-by-two grid on phones and a single row on larger screens. Track and Scorecard use the available viewport height. The scorecard stacks Front and Back nine grids in portrait, and places them beside each other in short landscape windows. Save and GitHub tools are below navigation in an expandable panel. Existing v2 round files, course presets, local saves, and the GitHub backup queue remain supported.

@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Golf Tracker viewport checks</title><style>
+body{font:14px system-ui;margin:16px;background:#e5e7eb}label{display:block;margin-bottom:12px}select{font:inherit;padding:6px}iframe{display:block;border:1px solid #9ca3af;background:white}
+</style></head><body>
+<label>Test viewport <select id="size"><option value="390,700">Phone · 390 × 700</option><option value="375,600">Small phone · 375 × 600</option><option value="320,568">Compact phone · 320 × 568</option><option value="744,950">Tablet · 744 × 950</option><option value="800,340">Phone landscape · 800 × 340</option><option value="1024,700">Desktop · 1024 × 700</option></select></label>
+<iframe id="app" title="Golf Tracker test viewport" width="390" height="700" src="../index.html"></iframe>
+<script>document.querySelector('#size').addEventListener('change',e=>{const [w,h]=e.target.value.split(',');const frame=document.querySelector('#app');frame.width=w;frame.height=h});</script>
+</body></html>
